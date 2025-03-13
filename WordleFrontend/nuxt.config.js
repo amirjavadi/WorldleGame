@@ -1,49 +1,66 @@
-export default {
-  // Target: https://go.nuxtjs.dev/config-target
-  target: 'static',
-
-  // Global page headers: https://go.nuxtjs.dev/config-head
-  head: {
-    title: 'Wordle Game',
-    meta: [
-      { charset: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { hid: 'description', name: 'description', content: 'A modern Wordle game built with Nuxt.js' }
-    ],
-    link: [
-      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
-    ]
-  },
-
-  // Modules: https://go.nuxtjs.dev/config-modules
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  devtools: { enabled: true },
   modules: [
-    '@nuxtjs/axios',
-    '@nuxtjs/vuetify'
+    '@nuxtjs/tailwindcss',
+    '@pinia/nuxt',
+    '@nuxtjs/i18n',
+    '@nuxtjs/color-mode'
   ],
-
-  // Axios module configuration: https://go.nuxtjs.dev/config-axios
-  axios: {
-    baseURL: 'http://localhost:5000/api'
-  },
-
-  // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
-  vuetify: {
-    customVariables: ['~/assets/variables.scss'],
-    theme: {
-      dark: false
-    }
-  },
-
-  // Build Configuration: https://go.nuxtjs.dev/config-build
-  build: {
-    transpile: ['vuetify/lib'],
-    plugins: [
-      '~/plugins/vuetify.js'
-    ],
-    loaders: {
-      scss: {
-        implementation: require('sass')
+  i18n: {
+    locales: ['fa', 'en'],
+    defaultLocale: 'fa',
+    vueI18n: {
+      legacy: false,
+      locale: 'fa',
+      messages: {
+        fa: {
+          welcome: 'خوش آمدید',
+          login: 'ورود',
+          register: 'ثبت نام',
+          play: 'بازی',
+          history: 'تاریخچه',
+          profile: 'پروفایل',
+          username: 'نام کاربری',
+          password: 'رمز عبور',
+          email: 'ایمیل',
+          confirmPassword: 'تکرار رمز عبور',
+          loading: 'در حال بارگذاری...',
+          noAccount: 'حساب کاربری ندارید؟',
+          haveAccount: 'حساب کاربری دارید؟',
+          loginError: 'خطا در ورود',
+          registerError: 'خطا در ثبت نام',
+          passwordsDoNotMatch: 'رمزهای عبور مطابقت ندارند'
+        },
+        en: {
+          welcome: 'Welcome',
+          login: 'Login',
+          register: 'Register',
+          play: 'Play',
+          history: 'History',
+          profile: 'Profile',
+          username: 'Username',
+          password: 'Password',
+          email: 'Email',
+          confirmPassword: 'Confirm Password',
+          loading: 'Loading...',
+          noAccount: 'Don\'t have an account?',
+          haveAccount: 'Already have an account?',
+          loginError: 'Login failed',
+          registerError: 'Registration failed',
+          passwordsDoNotMatch: 'Passwords do not match'
+        }
       }
     }
+  },
+  colorMode: {
+    classSuffix: '',
+    preference: 'system',
+    fallback: 'light'
+  },
+  runtimeConfig: {
+    public: {
+      apiBase: 'http://localhost:5275/api'
+    }
   }
-} 
+}) 
