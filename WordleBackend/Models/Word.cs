@@ -5,6 +5,12 @@ namespace WordleBackend.Models
 {
     public class Word
     {
+        public Word()
+        {
+            Text = string.Empty;
+            CreatedBy = string.Empty;
+        }
+
         public int Id { get; set; }
 
         [Required]

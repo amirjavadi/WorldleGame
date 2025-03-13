@@ -5,6 +5,14 @@ namespace WordleBackend.Models
 {
     public class GameHistory
     {
+        public GameHistory()
+        {
+            UserId = string.Empty;
+            Guesses = string.Empty;
+            User = null!;
+            Word = null!;
+        }
+
         public int Id { get; set; }
         public string UserId { get; set; }
         public int WordId { get; set; }
