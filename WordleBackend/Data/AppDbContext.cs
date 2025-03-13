@@ -29,7 +29,7 @@ namespace WordleBackend.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Word>()
-                .HasIndex(w => w.Value)
+                .HasIndex(w => w.Text)
                 .IsUnique();
         }
     }
