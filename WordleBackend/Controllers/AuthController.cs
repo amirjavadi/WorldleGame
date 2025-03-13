@@ -34,7 +34,7 @@ namespace WordleBackend.Controllers
         {
             try
             {
-                var token = await _authService.LoginAsync(request.Email, request.Password);
+                var token = await _authService.LoginAsync(request.Username, request.Password);
                 return Ok(new { token });
             }
             catch (Exception ex)
@@ -53,7 +53,7 @@ namespace WordleBackend.Controllers
 
     public class LoginRequest
     {
-        public string Email { get; set; }
+        public string Username { get; set; }
         public string Password { get; set; }
     }
 } 

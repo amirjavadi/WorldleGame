@@ -11,7 +11,7 @@ namespace WordleBackend.Services
     public interface IAuthService
     {
         Task<User> RegisterAsync(string email, string password, string username);
-        Task<string> LoginAsync(string email, string password);
+        Task<string> LoginAsync(string username, string password);
         Task<User> GetUserByIdAsync(string userId);
     }
 
@@ -46,13 +46,16 @@ namespace WordleBackend.Services
             return user;
         }
 
-        public async Task<string> LoginAsync(string email, string password)
+        public async Task<string> LoginAsync(string username, string password)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
             if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             {
-                throw new Exception("ایمیل یا رمز عبور اشتباه است");
+                throw new Exception("نام کاربری یا رمز عبور اشتباه است");
             }
+
+            user.LastLoginAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
 
             return GenerateJwtToken(user);
         }
@@ -71,14 +74,15 @@ namespace WordleBackend.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.Username)
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, "Admin")
             };
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddDays(7),
+                expires: DateTime.UtcNow.AddDays(7),
                 signingCredentials: credentials
             );
 
