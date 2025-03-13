@@ -6,7 +6,7 @@ namespace WordleBackend.Models
 {
     public class User
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; }
 
         [Required]
         [EmailAddress]
@@ -23,9 +23,9 @@ namespace WordleBackend.Models
 
         public virtual ICollection<GameHistory> GameHistories { get; set; }
 
-        public int TotalGamesPlayed { get; set; }
-        public int TotalGamesWon { get; set; }
+        public int TotalGames { get; set; }
+        public int WonGames { get; set; }
         public int CurrentStreak { get; set; }
-        public int BestStreak { get; set; }
+        public int MaxStreak { get; set; }
     }
 } 

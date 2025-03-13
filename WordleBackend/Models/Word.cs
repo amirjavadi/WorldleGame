@@ -5,17 +5,19 @@ namespace WordleBackend.Models
 {
     public class Word
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
         [Required]
         [StringLength(5, MinimumLength = 5)]
-        public string Value { get; set; }
+        public string Text { get; set; }
 
-        public DateTime? UsedOn { get; set; }
+        public DateTime Date { get; set; }
 
         public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? UpdatedAt { get; set; }
 
         public string CreatedBy { get; set; } // Admin username who added the word
     }

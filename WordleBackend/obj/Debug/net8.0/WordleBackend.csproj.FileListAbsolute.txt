@@ -1,0 +1,8 @@
+/home/office/projects/WorldleGame/WordleBackend/obj/Debug/net8.0/WordleBackend.csproj.AssemblyReference.cache
+/home/office/projects/WorldleGame/WordleBackend/obj/Debug/net8.0/WordleBackend.GeneratedMSBuildEditorConfig.editorconfig
+/home/office/projects/WorldleGame/WordleBackend/obj/Debug/net8.0/WordleBackend.AssemblyInfoInputs.cache
+/home/office/projects/WorldleGame/WordleBackend/obj/Debug/net8.0/WordleBackend.AssemblyInfo.cs
+/home/office/projects/WorldleGame/WordleBackend/obj/Debug/net8.0/WordleBackend.csproj.CoreCompileInputs.cache
+/home/office/projects/WorldleGame/WordleBackend/obj/Debug/net8.0/WordleBackend.MvcApplicationPartsAssemblyInfo.cs
+/home/office/projects/WorldleGame/WordleBackend/obj/Debug/net8.0/WordleBackend.MvcApplicationPartsAssemblyInfo.cache
+/home/office/projects/WorldleGame/WordleBackend/obj/Debug/net8.0/WordleBackend.sourcelink.json

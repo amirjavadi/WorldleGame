@@ -11,8 +11,8 @@ namespace WordleBackend.Data
         }
 
         public DbSet<User> Users { get; set; }
-        public DbSet<GameHistory> GameHistories { get; set; }
         public DbSet<Word> Words { get; set; }
+        public DbSet<GameHistory> GameHistories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
