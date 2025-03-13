@@ -1,110 +1,90 @@
-# Wordle Game
+# Worldle Game
 
-A modern implementation of the popular Wordle game built with .NET Core 8 and Nuxt.js.
+یک بازی حدس کلمه به سبک Wordle با پشتیبانی از زبان فارسی و انگلیسی.
 
-## Features
+## ویژگی‌های فعلی
 
-- Beautiful, responsive UI with animations
-- User authentication and profiles
-- Daily word challenges
-- Game history and statistics
-- Global leaderboard
-- Social sharing
-- Admin panel for word management
+- پشتیبانی از زبان فارسی و انگلیسی
+- حالت‌های مختلف دشواری (آسان، متوسط، سخت)
+- سیستم امتیازدهی
+- آمار بازی (تعداد بازی‌ها، درصد برد، استریک فعلی و بهترین استریک)
+- سیستم راهنمایی
+- انیمیشن‌های جذاب
+- پشتیبانی از تم تاریک و روشن
+- رابط کاربری ریسپانسیو
 
-## Prerequisites
+## نحوه اجرا
 
-- .NET Core 8 SDK
-- Node.js (v16 or later)
-- SQL Server
-- Redis (optional, for caching)
-
-## Project Structure
-
-```
-WordleGame/
-├── WordleBackend/          # .NET Core 8 API
-└── WordleFrontend/         # Nuxt.js frontend
+1. نصب وابستگی‌ها:
+```bash
+cd WordleFrontend
+npm install
 ```
 
-## Getting Started
+2. اجرای برنامه در حالت توسعه:
+```bash
+npm run dev
+```
 
-### Backend Setup
+3. ساخت نسخه تولید:
+```bash
+npm run build
+```
 
-1. Navigate to the backend directory:
-   ```bash
-   cd WordleBackend
-   ```
+## ساختار پروژه
 
-2. Restore dependencies:
-   ```bash
-   dotnet restore
-   ```
+```
+WordleFrontend/
+├── components/     # کامپوننت‌های Vue
+├── composables/    # کامپوزابل‌های Vue
+├── pages/         # صفحات اصلی برنامه
+├── public/        # فایل‌های استاتیک
+└── assets/        # منابع برنامه
+```
 
-3. Update the connection string in `appsettings.json`
+## تکنولوژی‌های استفاده شده
 
-4. Run database migrations:
-   ```bash
-   dotnet ef database update
-   ```
+- Vue 3
+- Tailwind CSS
+- Nuxt.js
+- TypeScript
 
-5. Start the API:
-   ```bash
-   dotnet run
-   ```
+## وضعیت فعلی پروژه
 
-### Frontend Setup
+- [x] پیاده‌سازی رابط کاربری اصلی
+- [x] پیاده‌سازی سیستم تایپ مستقیم در مربع‌ها
+- [x] پیاده‌سازی سیستم امتیازدهی
+- [x] پیاده‌سازی سیستم راهنمایی
+- [x] پیاده‌سازی انیمیشن‌ها
+- [x] پشتیبانی از زبان فارسی و انگلیسی
+- [x] پشتیبانی از تم تاریک و روشن
+- [ ] پیاده‌سازی سیستم احراز هویت
+- [ ] ذخیره‌سازی آمار بازی در دیتابیس
+- [ ] پیاده‌سازی سیستم انتخاب کلمات تصادفی
+- [ ] تست‌های واحد و یکپارچگی
+- [ ] بهینه‌سازی عملکرد
+- [ ] مستندسازی API
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd WordleFrontend
-   ```
+## نکات مهم برای توسعه
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+1. قبل از شروع کار جدید، حتماً از آخرین تغییرات pull بگیرید
+2. برای هر تغییر جدید، یک branch جدید ایجاد کنید
+3. قبل از merge کردن تغییرات، حتماً تست کنید
+4. کدها را با فرمت‌بندی مناسب بنویسید
+5. کامنت‌های مناسب برای توضیح کدهای پیچیده اضافه کنید
 
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
+## مشکلات شناخته شده
 
-4. Open your browser and navigate to `http://localhost:3000`
+1. نیاز به پیاده‌سازی سیستم احراز هویت
+2. نیاز به ذخیره‌سازی آمار بازی
+3. نیاز به سیستم انتخاب کلمات تصادفی
+4. نیاز به تست‌های واحد و یکپارچگی
 
-## API Endpoints
+## برنامه آینده
 
-### Authentication
-- POST `/api/auth/register` - Register a new user
-- POST `/api/auth/login` - Login user
-- POST `/api/auth/logout` - Logout user
-
-### Game
-- GET `/api/game/daily-word` - Get the daily word
-- POST `/api/game/guess` - Submit a guess
-- GET `/api/game/history` - Get user's game history
-- GET `/api/game/leaderboard` - Get global leaderboard
-
-### Admin
-- GET `/api/admin/words` - Get all words
-- POST `/api/admin/words` - Add a new word
-- PUT `/api/admin/words/{id}` - Update a word
-- DELETE `/api/admin/words/{id}` - Delete a word
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- Inspired by the original Wordle game
-- Built with .NET Core 8 and Nuxt.js
-- UI components from Vuetify 
+1. پیاده‌سازی سیستم احراز هویت
+2. پیاده‌سازی ذخیره‌سازی آمار در دیتابیس
+3. پیاده‌سازی سیستم انتخاب کلمات تصادفی
+4. اضافه کردن تست‌ها
+5. بهینه‌سازی عملکرد
+6. مستندسازی API 
