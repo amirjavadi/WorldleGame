@@ -45,29 +45,14 @@ namespace WordleBackend.Controllers
         }
 
         [Authorize]
-        [HttpGet("rank")]
-        public async Task<IActionResult> GetUserRank()
+        [HttpGet("user-rank")]
+        public async Task<ActionResult<UserLeaderboardEntry>> GetUserRank()
         {
-            try
-            {
-                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized(new { message = "کاربر احراز هویت نشده است" });
-                }
-
-                var rank = await _leaderboardService.GetUserRankAsync(userId);
-                if (rank == null)
-                {
-                    return NotFound(new { message = "اطلاعات رتبه‌بندی یافت نشد" });
-                }
-
-                return Ok(rank);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
+            var rank = await _leaderboardService.GetUserRankAsync(userId);
+            if (rank == null)
+                return NotFound("کاربر یافت نشد");
+            return Ok(rank);
         }
 
         [HttpGet("statistics")]

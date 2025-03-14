@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using WordleBackend.Data;
@@ -7,168 +11,146 @@ namespace WordleBackend.Services
 {
     public interface IGameService
     {
-        Task<Word> GetTodaysWordAsync();
-        Task<(bool isCorrect, string[] feedback)> CheckGuessAsync(string userId, string guess);
-        Task<GameHistory> SubmitGuessAsync(string userId, string guess);
-        Task<GameHistory> GetGameHistoryAsync(string userId, DateTime date);
-        Task<IEnumerable<GameHistory>> GetUserGameHistoryAsync(string userId, int page = 1, int pageSize = 10);
+        Task<GameHistory> StartNewGameAsync(int userId);
+        Task<GameHistory> MakeGuessAsync(int gameId, int userId, string guess);
+        Task<List<GameHistory>> GetUserGameHistoryAsync(int userId, int page = 1, int pageSize = 10);
+        Task<GameHistory> GetGameHistoryAsync(int userId, DateTime date);
+        Task<List<GameHistory>> GetActiveGamesAsync(int userId);
+        Task<List<GameHistory>> GetCompletedGamesAsync(int userId);
     }
 
     public class GameService : IGameService
     {
         private readonly AppDbContext _context;
+        private readonly IWordService _wordService;
+        private const int MaxAttempts = 6;
 
-        public GameService(AppDbContext context)
+        public GameService(AppDbContext context, IWordService wordService)
         {
             _context = context;
+            _wordService = wordService;
         }
 
-        public async Task<Word> GetTodaysWordAsync()
-        {
-            var today = DateTime.UtcNow.Date;
-            var word = await _context.Words
-                .FirstOrDefaultAsync(w => w.Date.Date == today && w.IsActive);
-
-            if (word == null)
-            {
-                throw new Exception("کلمه امروز هنوز تنظیم نشده است");
-            }
-
-            return word;
-        }
-
-        public async Task<(bool isCorrect, string[] feedback)> CheckGuessAsync(string userId, string guess)
-        {
-            var todaysWord = await GetTodaysWordAsync();
-            var correctWord = todaysWord.Text;
-
-            if (guess.Length != correctWord.Length)
-            {
-                throw new Exception("طول کلمه حدس زده شده باید 5 حرف باشد");
-            }
-
-            var feedback = new string[5];
-            var usedPositions = new bool[5];
-
-            // اول حروف درست در جای درست را مشخص می‌کنیم
-            for (int i = 0; i < 5; i++)
-            {
-                if (guess[i] == correctWord[i])
-                {
-                    feedback[i] = "سبز";
-                    usedPositions[i] = true;
-                }
-            }
-
-            // سپس حروف درست در جای نادرست را مشخص می‌کنیم
-            for (int i = 0; i < 5; i++)
-            {
-                if (feedback[i] != null) continue;
-
-                var found = false;
-                for (int j = 0; j < 5; j++)
-                {
-                    if (!usedPositions[j] && guess[i] == correctWord[j])
-                    {
-                        feedback[i] = "زرد";
-                        usedPositions[j] = true;
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    feedback[i] = "خاکستری";
-                }
-            }
-
-            return (guess == correctWord, feedback);
-        }
-
-        public async Task<GameHistory> SubmitGuessAsync(string userId, string guess)
+        public async Task<GameHistory> StartNewGameAsync(int userId)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
+                throw new Exception("User not found");
+
+            var word = await _wordService.GetRandomWordAsync();
+            if (word == null)
+                throw new Exception("No words available");
+
+            var gameHistory = new GameHistory
             {
-                throw new Exception("کاربر یافت نشد");
-            }
+                UserId = userId,
+                WordId = word.Id,
+                StartTime = DateTime.UtcNow,
+                Status = "InProgress",
+                Attempts = 0,
+                Score = 0,
+                Guesses = "",
+                LastGuess = ""
+            };
 
-            var todaysWord = await GetTodaysWordAsync();
-            var (isCorrect, feedback) = await CheckGuessAsync(userId, guess);
+            _context.GameHistories.Add(gameHistory);
+            await _context.SaveChangesAsync();
 
-            var today = DateTime.UtcNow.Date;
+            return gameHistory;
+        }
+
+        public async Task<GameHistory> MakeGuessAsync(int gameId, int userId, string guess)
+        {
             var gameHistory = await _context.GameHistories
-                .FirstOrDefaultAsync(gh => gh.UserId == userId && gh.PlayedAt.Date == today);
+                .Include(gh => gh.Word)
+                .FirstOrDefaultAsync(gh => gh.Id == gameId && gh.UserId == userId);
 
             if (gameHistory == null)
-            {
-                gameHistory = new GameHistory
-                {
-                    UserId = userId,
-                    WordId = todaysWord.Id,
-                    Attempts = 1,
-                    IsWon = isCorrect,
-                    Guesses = JsonSerializer.Serialize(new[] { guess }),
-                    Score = CalculateScore(1, isCorrect)
-                };
-                _context.GameHistories.Add(gameHistory);
-            }
-            else
-            {
-                if (gameHistory.IsWon || gameHistory.Attempts >= 6)
-                {
-                    throw new Exception("بازی امروز به پایان رسیده است");
-                }
+                throw new Exception("Game not found");
 
-                var guesses = JsonSerializer.Deserialize<string[]>(gameHistory.Guesses)?.ToList() ?? new List<string>();
-                guesses.Add(guess);
-                gameHistory.Guesses = JsonSerializer.Serialize(guesses);
-                gameHistory.Attempts++;
-                gameHistory.IsWon = isCorrect;
-                gameHistory.Score = CalculateScore(gameHistory.Attempts, isCorrect);
-            }
+            if (gameHistory.Status != "InProgress")
+                throw new Exception("Game is already completed");
 
-            // به‌روزرسانی آمار کاربر
-            user.TotalGames = gameHistory.Attempts == 1 ? user.TotalGames + 1 : user.TotalGames;
-            if (isCorrect)
+            if (gameHistory.Attempts >= MaxAttempts)
+                throw new Exception("Maximum attempts reached");
+
+            if (guess.Length != gameHistory.Word.Text.Length)
+                throw new Exception($"Guess must be {gameHistory.Word.Text.Length} characters long");
+
+            gameHistory.Attempts++;
+            gameHistory.LastGuess = guess;
+            gameHistory.Guesses = string.IsNullOrEmpty(gameHistory.Guesses)
+                ? guess
+                : $"{gameHistory.Guesses},{guess}";
+
+            if (guess.Equals(gameHistory.Word.Text, StringComparison.OrdinalIgnoreCase))
             {
-                user.WonGames++;
-                user.CurrentStreak++;
-                user.MaxStreak = Math.Max(user.MaxStreak, user.CurrentStreak);
+                gameHistory.Status = "Won";
+                gameHistory.EndTime = DateTime.UtcNow;
+                gameHistory.Score = CalculateScore(gameHistory.Attempts);
             }
-            else if (gameHistory.Attempts >= 6)
+            else if (gameHistory.Attempts >= MaxAttempts)
             {
-                user.CurrentStreak = 0;
+                gameHistory.Status = "Lost";
+                gameHistory.EndTime = DateTime.UtcNow;
+                gameHistory.Score = 0;
             }
 
             await _context.SaveChangesAsync();
             return gameHistory;
         }
 
-        public async Task<GameHistory> GetGameHistoryAsync(string userId, DateTime date)
-        {
-            return await _context.GameHistories
-                .Include(gh => gh.Word)
-                .FirstOrDefaultAsync(gh => gh.UserId == userId && gh.PlayedAt.Date == date.Date);
-        }
-
-        public async Task<IEnumerable<GameHistory>> GetUserGameHistoryAsync(string userId, int page = 1, int pageSize = 10)
+        public async Task<List<GameHistory>> GetUserGameHistoryAsync(int userId, int page = 1, int pageSize = 10)
         {
             return await _context.GameHistories
                 .Include(gh => gh.Word)
                 .Where(gh => gh.UserId == userId)
-                .OrderByDescending(gh => gh.PlayedAt)
+                .OrderByDescending(gh => gh.StartTime)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
         }
 
-        private int CalculateScore(int attempts, bool isWon)
+        public async Task<GameHistory> GetGameHistoryAsync(int userId, DateTime date)
         {
-            if (!isWon) return 0;
-            // امتیاز بر اساس تعداد تلاش‌ها: 6 تلاش = 100 امتیاز، 1 تلاش = 600 امتیاز
-            return (7 - attempts) * 100;
+            var startOfDay = date.Date;
+            var endOfDay = startOfDay.AddDays(1);
+
+            return await _context.GameHistories
+                .Include(gh => gh.Word)
+                .Where(gh => gh.UserId == userId && gh.StartTime >= startOfDay && gh.StartTime < endOfDay)
+                .OrderByDescending(gh => gh.StartTime)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<GameHistory>> GetActiveGamesAsync(int userId)
+        {
+            return await _context.GameHistories
+                .Include(gh => gh.Word)
+                .Where(gh => gh.UserId == userId && gh.Status == "InProgress")
+                .OrderByDescending(gh => gh.StartTime)
+                .ToListAsync();
+        }
+
+        public async Task<List<GameHistory>> GetCompletedGamesAsync(int userId)
+        {
+            return await _context.GameHistories
+                .Include(gh => gh.Word)
+                .Where(gh => gh.UserId == userId && (gh.Status == "Won" || gh.Status == "Lost"))
+                .OrderByDescending(gh => gh.StartTime)
+                .ToListAsync();
+        }
+
+        private int CalculateScore(int attempts)
+        {
+            // Score calculation based on attempts:
+            // 1 attempt: 100 points
+            // 2 attempts: 80 points
+            // 3 attempts: 60 points
+            // 4 attempts: 40 points
+            // 5 attempts: 20 points
+            // 6 attempts: 10 points
+            return Math.Max(0, 120 - (attempts * 20));
         }
     }
 } 

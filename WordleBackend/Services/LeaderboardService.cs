@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using WordleBackend.Data;
 using WordleBackend.Models;
@@ -6,9 +10,9 @@ namespace WordleBackend.Services
 {
     public interface ILeaderboardService
     {
-        Task<IEnumerable<UserLeaderboardEntry>> GetGlobalLeaderboardAsync(int page = 1, int pageSize = 10);
-        Task<IEnumerable<UserLeaderboardEntry>> GetDailyLeaderboardAsync(DateTime date, int page = 1, int pageSize = 10);
-        Task<UserLeaderboardEntry?> GetUserRankAsync(string userId);
+        Task<List<UserLeaderboardEntry>> GetGlobalLeaderboardAsync(int page = 1, int pageSize = 10);
+        Task<List<UserLeaderboardEntry>> GetDailyLeaderboardAsync(DateTime date, int page = 1, int pageSize = 10);
+        Task<UserLeaderboardEntry?> GetUserRankAsync(int userId);
         Task<GameStatistics> GetGameStatisticsAsync();
     }
 
@@ -21,7 +25,7 @@ namespace WordleBackend.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<UserLeaderboardEntry>> GetGlobalLeaderboardAsync(int page = 1, int pageSize = 10)
+        public async Task<List<UserLeaderboardEntry>> GetGlobalLeaderboardAsync(int page = 1, int pageSize = 10)
         {
             return await _context.Users
                 .Where(u => u.TotalGames > 0)
@@ -35,18 +39,18 @@ namespace WordleBackend.Services
                     Username = u.Username,
                     TotalGames = u.TotalGames,
                     WonGames = u.WonGames,
-                    WinRate = u.TotalGames > 0 ? (double)u.WonGames / u.TotalGames : 0,
+                    WinRate = (double)u.WonGames / u.TotalGames,
                     CurrentStreak = u.CurrentStreak,
                     MaxStreak = u.MaxStreak
                 })
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<UserLeaderboardEntry>> GetDailyLeaderboardAsync(DateTime date, int page = 1, int pageSize = 10)
+        public async Task<List<UserLeaderboardEntry>> GetDailyLeaderboardAsync(DateTime date, int page = 1, int pageSize = 10)
         {
             return await _context.GameHistories
                 .Include(gh => gh.User)
-                .Where(gh => gh.PlayedAt.Date == date.Date && gh.IsWon)
+                .Where(gh => gh.StartTime.Date == date.Date && gh.Status == "Won")
                 .OrderBy(gh => gh.Attempts)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -60,7 +64,7 @@ namespace WordleBackend.Services
                 .ToListAsync();
         }
 
-        public async Task<UserLeaderboardEntry?> GetUserRankAsync(string userId)
+        public async Task<UserLeaderboardEntry?> GetUserRankAsync(int userId)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null || user.TotalGames == 0)
@@ -91,9 +95,9 @@ namespace WordleBackend.Services
             var totalUsers = await _context.Users.CountAsync();
             var activeUsers = await _context.Users.CountAsync(u => u.TotalGames > 0);
             var totalGames = await _context.GameHistories.CountAsync();
-            var totalWins = await _context.GameHistories.CountAsync(gh => gh.IsWon);
+            var totalWins = await _context.GameHistories.CountAsync(gh => gh.Status == "Won");
             var averageAttempts = await _context.GameHistories
-                .Where(gh => gh.IsWon)
+                .Where(gh => gh.Status == "Won")
                 .AverageAsync(gh => gh.Attempts);
 
             return new GameStatistics
@@ -110,7 +114,7 @@ namespace WordleBackend.Services
 
     public class UserLeaderboardEntry
     {
-        public string UserId { get; set; } = string.Empty;
+        public int UserId { get; set; }
         public string Username { get; set; } = string.Empty;
         public int TotalGames { get; set; }
         public int WonGames { get; set; }

@@ -7,18 +7,20 @@ namespace WordleBackend.Models
     {
         public GameHistory()
         {
-            UserId = string.Empty;
             Guesses = string.Empty;
-            User = null!;
-            Word = null!;
+            LastGuess = string.Empty;
+            Status = "InProgress";
+            StartTime = DateTime.UtcNow;
         }
 
         public int Id { get; set; }
-        public string UserId { get; set; }
+        public int UserId { get; set; }
         public int WordId { get; set; }
-        public DateTime PlayedAt { get; set; } = DateTime.UtcNow;
+        public DateTime StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
         public int Attempts { get; set; }
-        public bool IsWon { get; set; }
+        public string Status { get; set; } // "InProgress", "Won", "Lost"
+        public string LastGuess { get; set; }
         public string Guesses { get; set; } // JSON string of all guesses
         public int Score { get; set; }
 

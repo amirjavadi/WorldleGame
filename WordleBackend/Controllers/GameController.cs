@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WordleBackend.Services;
@@ -16,13 +18,18 @@ namespace WordleBackend.Controllers
             _gameService = gameService;
         }
 
-        [HttpGet("today")]
-        public async Task<IActionResult> GetTodaysWord()
+        [HttpPost("start")]
+        public async Task<IActionResult> StartGame()
         {
             try
             {
-                var word = await _gameService.GetTodaysWordAsync();
-                return Ok(new { length = word.Text.Length });
+                var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
+                var game = await _gameService.StartNewGameAsync(userId);
+                return Ok(new
+                {
+                    gameId = game.Id,
+                    wordLength = game.Word.Text.Length
+                });
             }
             catch (Exception ex)
             {
@@ -31,22 +38,18 @@ namespace WordleBackend.Controllers
         }
 
         [HttpPost("guess")]
-        public async Task<IActionResult> SubmitGuess([FromBody] GuessRequest request)
+        public async Task<IActionResult> MakeGuess([FromBody] GuessRequest request)
         {
             try
             {
-                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized(new { message = "کاربر احراز هویت نشده است" });
-                }
-
-                var result = await _gameService.SubmitGuessAsync(userId, request.Guess);
+                var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
+                var game = await _gameService.MakeGuessAsync(request.GameId, userId, request.Guess);
                 return Ok(new
                 {
-                    isWon = result.IsWon,
-                    attempts = result.Attempts,
-                    score = result.Score
+                    isWon = game.Status == "Won",
+                    attempts = game.Attempts,
+                    score = game.Score,
+                    status = game.Status
                 });
             }
             catch (Exception ex)
@@ -60,14 +63,39 @@ namespace WordleBackend.Controllers
         {
             try
             {
-                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized(new { message = "کاربر احراز هویت نشده است" });
-                }
-
+                var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
                 var history = await _gameService.GetUserGameHistoryAsync(userId, page, pageSize);
                 return Ok(history);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("active")]
+        public async Task<IActionResult> GetActiveGames()
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
+                var games = await _gameService.GetActiveGamesAsync(userId);
+                return Ok(games);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("completed")]
+        public async Task<IActionResult> GetCompletedGames()
+        {
+            try
+            {
+                var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
+                var games = await _gameService.GetCompletedGamesAsync(userId);
+                return Ok(games);
             }
             catch (Exception ex)
             {
@@ -80,12 +108,7 @@ namespace WordleBackend.Controllers
         {
             try
             {
-                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                {
-                    return Unauthorized(new { message = "کاربر احراز هویت نشده است" });
-                }
-
+                var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
                 var gameHistory = await _gameService.GetGameHistoryAsync(userId, DateTime.UtcNow);
                 if (gameHistory == null)
                 {
@@ -95,9 +118,10 @@ namespace WordleBackend.Controllers
                 return Ok(new
                 {
                     hasPlayed = true,
-                    isWon = gameHistory.IsWon,
+                    isWon = gameHistory.Status == "Won",
                     attempts = gameHistory.Attempts,
-                    score = gameHistory.Score
+                    score = gameHistory.Score,
+                    status = gameHistory.Status
                 });
             }
             catch (Exception ex)
@@ -109,6 +133,7 @@ namespace WordleBackend.Controllers
 
     public class GuessRequest
     {
-        public string Guess { get; set; } = string.Empty;
+        public int GameId { get; set; }
+        public string Guess { get; set; }
     }
 } 

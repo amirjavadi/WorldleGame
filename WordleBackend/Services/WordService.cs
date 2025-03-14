@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using WordleBackend.Data;
 using WordleBackend.Models;
@@ -12,6 +16,7 @@ namespace WordleBackend.Services
         Task<IEnumerable<Word>> GetWordsAsync(int page = 1, int pageSize = 10);
         Task<Word?> GetWordByIdAsync(int id);
         Task<bool> DeleteWordAsync(int id);
+        Task<Word?> GetRandomWordAsync();
     }
 
     public class WordService : IWordService
@@ -34,7 +39,10 @@ namespace WordleBackend.Services
             {
                 Text = text.ToUpper(),
                 CreatedAt = DateTime.UtcNow,
-                IsActive = false
+                UpdatedAt = DateTime.UtcNow,
+                IsActive = true,
+                Language = "en",
+                Difficulty = "medium"
             };
 
             _context.Words.Add(word);
@@ -48,7 +56,7 @@ namespace WordleBackend.Services
 
             // غیرفعال کردن کلمه روز قبلی
             var previousWord = await _context.Words
-                .FirstOrDefaultAsync(w => w.Date.Date == today && w.IsActive);
+                .FirstOrDefaultAsync(w => w.CreatedAt.Date == today && w.IsActive);
 
             if (previousWord != null)
             {
@@ -65,15 +73,17 @@ namespace WordleBackend.Services
                 {
                     Text = text.ToUpper(),
                     CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
                     IsActive = true,
-                    Date = today
+                    Language = "en",
+                    Difficulty = "medium"
                 };
                 _context.Words.Add(word);
             }
             else
             {
                 word.IsActive = true;
-                word.Date = today;
+                word.UpdatedAt = DateTime.UtcNow;
             }
 
             await _context.SaveChangesAsync();
@@ -88,6 +98,7 @@ namespace WordleBackend.Services
         public async Task<IEnumerable<Word>> GetWordsAsync(int page = 1, int pageSize = 10)
         {
             return await _context.Words
+                .Include(w => w.Category)
                 .OrderByDescending(w => w.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -96,7 +107,9 @@ namespace WordleBackend.Services
 
         public async Task<Word?> GetWordByIdAsync(int id)
         {
-            return await _context.Words.FindAsync(id);
+            return await _context.Words
+                .Include(w => w.Category)
+                .FirstOrDefaultAsync(w => w.Id == id);
         }
 
         public async Task<bool> DeleteWordAsync(int id)
@@ -110,6 +123,21 @@ namespace WordleBackend.Services
             _context.Words.Remove(word);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<Word?> GetRandomWordAsync()
+        {
+            var count = await _context.Words.CountAsync(w => w.IsActive);
+            if (count == 0)
+                return null;
+
+            var random = new Random();
+            var skip = random.Next(0, count);
+
+            return await _context.Words
+                .Where(w => w.IsActive)
+                .Skip(skip)
+                .FirstOrDefaultAsync();
         }
     }
 } 

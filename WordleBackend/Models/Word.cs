@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace WordleBackend.Models
@@ -9,22 +10,43 @@ namespace WordleBackend.Models
         {
             Text = string.Empty;
             CreatedBy = string.Empty;
+            Difficulty = "Normal";
+            Language = "en";
+            GameHistories = new List<GameHistory>();
+            IsActive = true;
+            CreatedAt = DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
         }
 
         public int Id { get; set; }
 
         [Required]
-        [StringLength(5, MinimumLength = 5)]
+        [MaxLength(50)]
         public string Text { get; set; }
 
-        public DateTime Date { get; set; }
+        [Required]
+        [MaxLength(20)]
+        public string Difficulty { get; set; }
 
-        public bool IsActive { get; set; } = true;
+        [Required]
+        [MaxLength(10)]
+        public string Language { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public bool IsActive { get; set; }
 
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
 
-        public string CreatedBy { get; set; } // Admin username who added the word
+        public DateTime UpdatedAt { get; set; }
+
+        public string CreatedBy { get; set; }
+
+        // Foreign key for Category
+        public int CategoryId { get; set; }
+
+        // Navigation property
+        public virtual Category Category { get; set; }
+
+        // Navigation property
+        public virtual ICollection<GameHistory> GameHistories { get; set; }
     }
 } 
