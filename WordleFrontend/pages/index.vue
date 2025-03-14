@@ -110,45 +110,64 @@
 
     <!-- مدال آمار -->
     <Teleport to="body">
-      <div v-if="showStats || (gameOver && showGameOverStats)" 
-           class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
-          <div class="flex justify-between items-center mb-6">
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('statistics') }}</h3>
-            <button @click="closeStats" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-              <i class="fas fa-times text-xl"></i>
-            </button>
-          </div>
-          
-          <div class="grid grid-cols-2 gap-4 mb-6">
-            <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ gamesPlayed }}</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('gamesPlayed') }}</p>
+      <Transition>
+        <div v-if="showStats" 
+             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+          <div class="bg-white dark:bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('statistics') }}</h3>
+              <button @click="closeStats" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                <i class="fas fa-times text-xl"></i>
+              </button>
             </div>
-            <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ winRate }}%</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('winRate') }}</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+              <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ gamesPlayed }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('gamesPlayed') }}</p>
+              </div>
+              <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ winRate }}%</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('winRate') }}</p>
+              </div>
+              <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ currentStreak }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('currentStreak') }}</p>
+              </div>
+              <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ bestStreak }}</p>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('bestStreak') }}</p>
+              </div>
             </div>
-            <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ currentStreak }}</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('currentStreak') }}</p>
-            </div>
-            <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ bestStreak }}</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('bestStreak') }}</p>
-            </div>
-          </div>
 
-          <div v-if="gameOver" class="text-center">
-            <button
-              @click="resetGame(); closeStats();"
-              class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
-            >
-              {{ t('playAgain') }}
-            </button>
+            <div v-if="gameOver" class="text-center">
+              <button
+                @click="resetGame(); closeStats();"
+                class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+              >
+                {{ t('playAgain') }}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </Transition>
+    </Teleport>
+
+    <!-- انیمیشن‌های برد و باخت -->
+    <Teleport to="body">
+      <Transition>
+        <WinAnimation v-if="gameOver && gameWon" 
+                     :score="score"
+                     :current-streak="currentStreak"
+                     @playAgain="handlePlayAgain" />
+      </Transition>
+      <Transition>
+        <LoseAnimation v-if="gameOver && !gameWon" 
+                      :correct-word="correctWord"
+                      :games-played="gamesPlayed"
+                      :win-rate="winRate"
+                      @playAgain="handlePlayAgain" />
+      </Transition>
     </Teleport>
 
     <!-- کیبورد -->
@@ -301,6 +320,8 @@ import { useSounds } from '../composables/useSounds'
 import { useRouter } from 'vue-router'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useColorMode } from '#imports'
+import WinAnimation from '~/components/WinAnimation.vue'
+import LoseAnimation from '~/components/LoseAnimation.vue'
 
 const { t, locale, setLocale } = useTranslations()
 const { playSound, isSoundEnabled, toggleSound } = useSounds()
@@ -471,15 +492,18 @@ const handleKeyPress = (event) => {
     if (currentCol.value === wordLength.value) {
       // اگر حدس درست باشد
       if (guesses.value[currentRow.value].join('') === correctWord.value) {
-        playSound('success')
+        playSound('win')
         gameWon.value = true
         gameOver.value = true
-        showGameOverStats.value = true
+        completedRows.value.add(currentRow.value)
+        updateStats(true)
       } else if (currentRow.value === maxGuesses.value - 1) {
         // اگر بازی تمام شده باشد
         playSound('gameOver')
         gameOver.value = true
-        showGameOverStats.value = true
+        gameWon.value = false
+        completedRows.value.add(currentRow.value)
+        updateStats(false)
       } else {
         // حدس اشتباه
         playSound('error')
@@ -511,34 +535,22 @@ const isValidKey = (key) => {
   return validLetters.includes(key)
 }
 
-const submitGuess = () => {
-  if (!guesses.value[currentRow.value] || guesses.value[currentRow.value].length !== wordLength.value) return
-  
-  completedRows.value.add(currentRow.value)
-  
-  setTimeout(() => {
-    if (guesses.value[currentRow.value] === correctWord.value) {
-      gameOver.value = true
-      gameWon.value = true
-      gamesPlayed.value++
-      currentStreak.value++
-      bestStreak.value = Math.max(bestStreak.value, currentStreak.value)
-      winRate.value = Math.round((gamesPlayed.value / (gamesPlayed.value + 1)) * 100)
-      score.value += calculateScore(currentRow.value + 1)
-      helpCount.value++
-      showGameOverStats.value = true
-    } else if (currentRow.value >= maxGuesses.value - 1) {
-      gameOver.value = true
-      gameWon.value = false
-      gamesPlayed.value++
-      currentStreak.value = 0
-      winRate.value = Math.round((gamesPlayed.value / (gamesPlayed.value + 1)) * 100)
-      showGameOverStats.value = true
-    } else {
-      currentRow.value++
-      currentCol.value = 0
-    }
-  }, 600)
+const updateStats = (won) => {
+  gamesPlayed.value++
+  if (won) {
+    currentStreak.value++
+    bestStreak.value = Math.max(bestStreak.value, currentStreak.value)
+    score.value += calculateScore(currentRow.value + 1)
+    helpCount.value++
+  } else {
+    currentStreak.value = 0
+  }
+  winRate.value = Math.round((currentStreak.value / gamesPlayed.value) * 100)
+}
+
+const handlePlayAgain = () => {
+  // حذف نمایش آمار
+  resetGame()
 }
 
 const resetGame = () => {
@@ -551,7 +563,8 @@ const resetGame = () => {
   completedRows.value.clear()
   disabledLetters.value.clear()
   helpLetters.value.clear()
-  revealedHelpLetters.value.clear() // پاک کردن حروف کمکی نشان داده شده در بازی قبلی
+  revealedHelpLetters.value.clear()
+  showStats.value = false
   // TODO: Get new word based on difficulty
 }
 
@@ -856,5 +869,16 @@ button:hover {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+/* انیمیشن‌های ظاهر و ناپدید شدن */
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
 }
 </style> 
