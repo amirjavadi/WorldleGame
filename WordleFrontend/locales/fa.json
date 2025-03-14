@@ -1,0 +1,18 @@
+{
+  "welcome": "خوش آمدید",
+  "login": "ورود",
+  "register": "ثبت نام",
+  "play": "بازی",
+  "history": "تاریخچه",
+  "profile": "پروفایل",
+  "username": "نام کاربری",
+  "password": "رمز عبور",
+  "email": "ایمیل",
+  "confirmPassword": "تکرار رمز عبور",
+  "loading": "در حال بارگذاری...",
+  "noAccount": "حساب کاربری ندارید؟",
+  "haveAccount": "حساب کاربری دارید؟",
+  "loginError": "خطا در ورود",
+  "registerError": "خطا در ثبت نام",
+  "passwordsDoNotMatch": "رمزهای عبور مطابقت ندارند"
+} 
