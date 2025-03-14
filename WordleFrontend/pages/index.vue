@@ -297,6 +297,7 @@ const showStats = ref(false)
 const showGameOverStats = ref(false)
 const username = ref('کاربر') // این مقدار باید از سیستم احراز هویت دریافت شود
 const disabledLetters = ref(new Set())
+const helpLetters = ref(new Set()) // برای ذخیره موقعیت حروف کمکی
 
 const maxGuesses = computed(() => {
   switch (difficulty.value) {
@@ -316,6 +317,34 @@ const toggleTheme = () => {
   document.documentElement.classList.toggle('dark')
 }
 
+const getLetterClass = (letter, index, row) => {
+  if (!letter) return 'border-gray-300 dark:border-gray-600'
+  
+  // اگر این حرف کمکی است، همیشه سبز نشان داده شود
+  if (helpLetters.value.has(`${row-1}-${index}`)) {
+    return 'bg-green-500 text-white border-green-500'
+  }
+  
+  // اگر ردیف هنوز کامل نشده، فقط حاشیه خاکستری نشان بده
+  if (!completedRows.value || !completedRows.value.has(row - 1)) {
+    return 'border-gray-300 dark:border-gray-600'
+  }
+  
+  // برای ردیف‌های کامل شده، رنگ‌ها را نشان بده
+  if (letter === correctWord.value[index]) return 'bg-green-500 text-white border-green-500'
+  if (correctWord.value.includes(letter)) return 'bg-yellow-500 text-white border-yellow-500'
+  return 'bg-gray-500 text-white border-gray-500'
+}
+
+const findNextEmptyPosition = () => {
+  for (let i = 0; i < wordLength.value; i++) {
+    if (!guesses.value[currentRow.value]?.[i] && !helpLetters.value.has(`${currentRow.value}-${i}`)) {
+      return i
+    }
+  }
+  return -1
+}
+
 const useHelp = () => {
   if (helpCount.value <= 0) {
     alert(t('noHelpLeft'))
@@ -325,7 +354,7 @@ const useHelp = () => {
   // پیدا کردن موقعیت‌های خالی در سطر فعلی
   const emptyPositions = []
   for (let i = 0; i < wordLength.value; i++) {
-    if (!guesses.value[currentRow.value]?.[i]) {
+    if (!guesses.value[currentRow.value]?.[i] && !helpLetters.value.has(`${currentRow.value}-${i}`)) {
       emptyPositions.push(i)
     }
   }
@@ -343,23 +372,13 @@ const useHelp = () => {
     guesses.value[currentRow.value] = []
   }
   guesses.value[currentRow.value][randomEmptyPosition] = correctWord.value[randomEmptyPosition]
-  currentCol.value = Math.max(currentCol.value, randomEmptyPosition + 1)
+  helpLetters.value.add(`${currentRow.value}-${randomEmptyPosition}`)
+
+  // انتقال فوکوس به اولین مربع خالی
+  const nextEmpty = findNextEmptyPosition()
+  currentCol.value = nextEmpty !== -1 ? nextEmpty : randomEmptyPosition + 1
 
   helpCount.value--
-}
-
-const getLetterClass = (letter, index, row) => {
-  if (!letter) return 'border-gray-300 dark:border-gray-600'
-  
-  // اگر ردیف هنوز کامل نشده، فقط حاشیه خاکستری نشان بده
-  if (!completedRows.value || !completedRows.value.has(row - 1)) {
-    return 'border-gray-300 dark:border-gray-600'
-  }
-  
-  // برای ردیف‌های کامل شده، رنگ‌ها را نشان بده
-  if (letter === correctWord.value[index]) return 'bg-green-500 text-white border-green-500'
-  if (correctWord.value.includes(letter)) return 'bg-yellow-500 text-white border-yellow-500'
-  return 'bg-gray-500 text-white border-gray-500'
 }
 
 const calculateScore = (guessCount) => {
@@ -383,8 +402,12 @@ const handleKeyPress = (event) => {
   if (key === 'backspace' || key === 'enter') {
     if (key === 'backspace') {
       if (currentCol.value > 0) {
-        currentCol.value--
-        guesses.value[currentRow.value][currentCol.value] = ''
+        // اگر حرف قبلی کمکی نیست، آن را پاک کن
+        const prevPosition = `${currentRow.value}-${currentCol.value - 1}`
+        if (!helpLetters.value.has(prevPosition)) {
+          currentCol.value--
+          guesses.value[currentRow.value][currentCol.value] = ''
+        }
       }
     } else if (key === 'enter') {
       if (currentCol.value === wordLength.value) {
@@ -399,11 +422,22 @@ const handleKeyPress = (event) => {
       : 'abcdefghijklmnopqrstuvwxyz'
       
     if (validLetters.includes(key) && currentCol.value < wordLength.value && !isLetterDisabled(key)) {
-      if (!guesses.value[currentRow.value]) {
-        guesses.value[currentRow.value] = []
+      // اگر موقعیت فعلی حرف کمکی است، به دنبال موقعیت خالی بعدی برو
+      const currentPosition = `${currentRow.value}-${currentCol.value}`
+      if (helpLetters.value.has(currentPosition)) {
+        const nextEmpty = findNextEmptyPosition()
+        if (nextEmpty !== -1) {
+          currentCol.value = nextEmpty
+        }
       }
-      guesses.value[currentRow.value][currentCol.value] = key
-      currentCol.value++
+
+      if (!helpLetters.value.has(`${currentRow.value}-${currentCol.value}`)) {
+        if (!guesses.value[currentRow.value]) {
+          guesses.value[currentRow.value] = []
+        }
+        guesses.value[currentRow.value][currentCol.value] = key
+        currentCol.value++
+      }
     }
   }
 }
@@ -445,8 +479,9 @@ const resetGame = () => {
   gameOver.value = false
   gameWon.value = false
   revealedLetters.value = []
-  completedRows.value.clear() // پاک کردن ردیف‌های کامل شده
+  completedRows.value.clear()
   disabledLetters.value.clear()
+  helpLetters.value.clear() // پاک کردن حروف کمکی
   // TODO: Get new word based on difficulty
 }
 
