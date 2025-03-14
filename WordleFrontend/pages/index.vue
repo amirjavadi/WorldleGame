@@ -324,7 +324,7 @@ const getLetterClass = (letter, index, row) => {
   
   // اگر این حرف کمکی است، همیشه سبز نشان داده شود
   if (helpLetters.value.has(`${row-1}-${index}`)) {
-    return 'bg-green-500 text-white border-green-500'
+    return theme.value === 'light' ? 'bg-green-200 text-green-800 border-green-300' : 'bg-green-500 text-white border-green-500'
   }
   
   // اگر ردیف هنوز کامل نشده، فقط حاشیه خاکستری نشان بده
@@ -333,9 +333,13 @@ const getLetterClass = (letter, index, row) => {
   }
   
   // برای ردیف‌های کامل شده، رنگ‌ها را نشان بده
-  if (letter === correctWord.value[index]) return 'bg-green-500 text-white border-green-500'
-  if (correctWord.value.includes(letter)) return 'bg-yellow-500 text-white border-yellow-500'
-  return 'bg-gray-500 text-white border-gray-500'
+  if (letter === correctWord.value[index]) {
+    return theme.value === 'light' ? 'bg-green-200 text-green-800 border-green-300' : 'bg-green-500 text-white border-green-500'
+  }
+  if (correctWord.value.includes(letter)) {
+    return theme.value === 'light' ? 'bg-yellow-200 text-yellow-800 border-yellow-300' : 'bg-yellow-500 text-white border-yellow-500'
+  }
+  return theme.value === 'light' ? 'bg-gray-200 text-gray-800 border-gray-300' : 'bg-gray-500 text-white border-gray-500'
 }
 
 const findNextEmptyPosition = () => {
