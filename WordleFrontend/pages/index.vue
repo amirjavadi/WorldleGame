@@ -564,9 +564,9 @@ const getKeyboardLetterClass = (letter) => {
   
   if (isLetterDisabled(letter)) {
     classes = 'text-[#646971] dark:text-gray-400 bg-[#464b514d] dark:bg-gray-600'
-  } else if (correctWord.value.includes(letter)) {
+  } else if (theme.value === 'dark' && correctWord.value.includes(letter)) {
     classes += ' bg-green-500 text-white'
-  } else if (guesses.value[currentRow.value]?.includes(letter)) {
+  } else if (theme.value === 'dark' && guesses.value[currentRow.value]?.includes(letter)) {
     classes += ' bg-yellow-500 text-white'
   }
   
