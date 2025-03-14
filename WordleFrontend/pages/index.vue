@@ -336,9 +336,25 @@ const getLetterClass = (letter, index, row) => {
   if (letter === correctWord.value[index]) {
     return theme.value === 'light' ? 'bg-green-200 text-green-800 border-green-300' : 'bg-green-500 text-white border-green-500'
   }
-  if (correctWord.value.includes(letter)) {
+
+  // بررسی تعداد تکرار حرف در کلمه صحیح
+  const letterCount = correctWord.value.split('').filter(l => l === letter).length
+  
+  // بررسی تعداد حروف سبز (حروف درست در جای درست) برای این حرف
+  const greenCount = guesses.value[row - 1].reduce((count, l, i) => {
+    return count + (l === letter && l === correctWord.value[i] ? 1 : 0)
+  }, 0)
+  
+  // بررسی تعداد حروف زرد قبل از این ایندکس
+  const yellowCount = guesses.value[row - 1].slice(0, index).reduce((count, l, i) => {
+    return count + (l === letter && l !== correctWord.value[i] && correctWord.value.includes(l) ? 1 : 0)
+  }, 0)
+  
+  // اگر هنوز جا برای نمایش زرد داریم
+  if (correctWord.value.includes(letter) && yellowCount + greenCount < letterCount) {
     return theme.value === 'light' ? 'bg-yellow-200 text-yellow-800 border-yellow-300' : 'bg-yellow-500 text-white border-yellow-500'
   }
+  
   return theme.value === 'light' ? 'bg-gray-200 text-gray-800 border-gray-300' : 'bg-gray-500 text-white border-gray-500'
 }
 
