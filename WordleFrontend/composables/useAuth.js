@@ -1,121 +1,79 @@
 import { ref } from 'vue'
-import { useTranslations } from './useTranslations'
+import { useApi } from './useApi'
 
 export const useAuth = () => {
-  const { t } = useTranslations()
-  const token = ref(process.client ? localStorage.getItem('token') : null)
-  const user = ref(process.client ? JSON.parse(localStorage.getItem('user')) : null)
+  const user = ref(null)
   const loading = ref(false)
   const error = ref(null)
-  const isGuest = ref(process.client ? localStorage.getItem('isGuest') === 'true' : false)
+  const api = useApi()
 
-  const setAuthData = (userData, authToken) => {
-    if (process.client) {
-      user.value = userData
-      token.value = authToken
-      localStorage.setItem('user', JSON.stringify(userData))
-      localStorage.setItem('token', authToken)
-      isGuest.value = false
-      localStorage.setItem('isGuest', 'false')
-    }
-  }
-
-  const clearAuthData = () => {
-    if (process.client) {
-      user.value = null
-      token.value = null
-      isGuest.value = false
-      localStorage.removeItem('user')
-      localStorage.removeItem('token')
-      localStorage.removeItem('isGuest')
-    }
-  }
-
-  const setGuestMode = () => {
-    if (process.client) {
-      isGuest.value = true
-      localStorage.setItem('isGuest', 'true')
-    }
+  const checkAuth = () => {
+    const token = localStorage.getItem('token')
+    return !!token
   }
 
   const login = async (username, password) => {
+    loading.value = true
+    error.value = null
     try {
-      loading.value = true
-      error.value = null
-      
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Login failed')
+      const response = await api.auth.login(username, password)
+      if (response.token) {
+        localStorage.setItem('token', response.token)
+        user.value = {
+          username: username,
+          role: response.role
+        }
+        return true
       }
-
-      const data = await response.json()
-      setAuthData(data.user, data.token)
-      return true
+      return false
     } catch (e) {
-      error.value = e.message
+      error.value = e.message || 'خطا در ورود'
       return false
     } finally {
       loading.value = false
     }
   }
 
-  const register = async (username, email, password) => {
-    try {
-      loading.value = true
-      error.value = null
-
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, email, password }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Registration failed')
-      }
-
-      const data = await response.json()
-      setAuthData(data.user, data.token)
-      return true
-    } catch (e) {
-      error.value = e.message
-      return false
-    } finally {
-      loading.value = false
+  const playAsGuest = () => {
+    user.value = {
+      username: 'مهمان',
+      role: 'guest'
     }
+    localStorage.setItem('isGuest', 'true')
+    return true
   }
 
   const logout = () => {
-    clearAuthData()
+    user.value = null
+    localStorage.removeItem('token')
+    localStorage.removeItem('isGuest')
   }
 
-  const checkAuth = () => {
-    return !!token.value || isGuest.value
+  const register = async (username, email, password) => {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.auth.register(username, email, password)
+      if (response.success) {
+        return await login(username, password)
+      }
+      return false
+    } catch (e) {
+      error.value = e.message || 'خطا در ثبت نام'
+      return false
+    } finally {
+      loading.value = false
+    }
   }
 
   return {
     user,
-    token,
     loading,
     error,
-    isGuest,
     login,
-    register,
     logout,
+    register,
     checkAuth,
-    setGuestMode
+    playAsGuest
   }
-}
-
-export default useAuth 
+} 

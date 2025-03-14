@@ -6,6 +6,7 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@nuxtjs/color-mode'
   ],
+  plugins: ['~/plugins/vuetify.js'],
   colorMode: {
     classSuffix: '',
     preference: 'light',
@@ -20,8 +21,10 @@ export default defineNuxtConfig({
   },
   compatibilityDate: '2025-03-13',
   css: [
-    '@/assets/css/main.css',
-    '@fortawesome/fontawesome-free/css/all.css'
+    '@fortawesome/fontawesome-free/css/all.css',
+    '~/assets/css/main.css',
+    '~/assets/css/theme.css',
+    'vuetify/styles'
   ],
   app: {
     head: {
@@ -41,5 +44,8 @@ export default defineNuxtConfig({
         './nuxt.config.{js,ts}',
       ]
     }
+  },
+  build: {
+    transpile: ['vuetify']
   }
 }) 

@@ -1,0 +1,85 @@
+/* Light Theme */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --border-color: #e5e7eb;
+  --input-bg: #f9fafb;
+  --input-border: #d1d5db;
+  --input-focus: #10b981;
+  --button-primary: #10b981;
+  --button-hover: #059669;
+  --button-secondary-bg: #f3f4f6;
+  --button-secondary-text: #4b5563;
+  --button-secondary-border: #d1d5db;
+  --button-secondary-hover-bg: #e5e7eb;
+}
+
+/* Dark Theme */
+.dark {
+  --bg-primary: #1f2937;
+  --bg-secondary: #111827;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --border-color: #374151;
+  --input-bg: #374151;
+  --input-border: #4b5563;
+  --input-focus: #34d399;
+  --button-primary: #34d399;
+  --button-hover: #10b981;
+  --button-secondary-bg: #374151;
+  --button-secondary-text: #d1d5db;
+  --button-secondary-border: #4b5563;
+  --button-secondary-hover-bg: #4b5563;
+}
+
+/* Common Styles */
+.theme-bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.theme-bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.theme-text-primary {
+  color: var(--text-primary);
+}
+
+.theme-text-secondary {
+  color: var(--text-secondary);
+}
+
+.theme-border {
+  border-color: var(--border-color);
+}
+
+.theme-input {
+  background-color: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text-primary);
+}
+
+.theme-input:focus {
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 2px rgba(var(--input-focus), 0.2);
+}
+
+.theme-button-primary {
+  background-color: var(--button-primary);
+}
+
+.theme-button-primary:hover {
+  background-color: var(--button-hover);
+}
+
+.theme-button-secondary {
+  background-color: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
+  border: 1px solid var(--button-secondary-border);
+}
+
+.theme-button-secondary:hover {
+  background-color: var(--button-secondary-hover-bg);
+} 

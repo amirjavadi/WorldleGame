@@ -6,7 +6,7 @@
           <h1 class="text-3xl font-bold text-gray-900 dark:text-white font-display">
             {{ t('gameTitle') }}
           </h1>
-          <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-4 rtl:space-x-reverse">
             <select
               v-model="difficulty"
               class="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
@@ -27,6 +27,13 @@
               class="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
             >
               <i :class="['fas', theme === 'light' ? 'fa-moon' : 'fa-sun', 'text-xl']"></i>
+            </button>
+            <button
+              @click="toggleSound"
+              class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+              :title="isSoundEnabled ? t('muteSound') : t('unmuteSound')"
+            >
+              <i :class="['fas', isSoundEnabled ? 'fa-volume-up' : 'fa-volume-mute', 'text-xl']"></i>
             </button>
             <button
               @click="showStats = true"
@@ -82,15 +89,15 @@
                     class="w-12 h-12 flex items-center justify-center text-2xl font-bold rounded-lg border-2 cursor-pointer transition-all duration-200 hover:border-indigo-500 relative"
                     :class="[
                       getLetterClass(guesses[row - 1]?.[col - 1], col - 1, row),
-                      currentRow === row - 1 && currentCol === col ? 'border-indigo-500 ring-4 ring-indigo-200 dark:ring-indigo-900 shadow-lg active-square cursor-text' : '',
-                      currentRow === row - 1 && col === 0 && !guesses[row - 1]?.length ? 'initial-active' : '',
+                      currentRow === row - 1 && currentCol === col - 1 ? 'active-square' : '',
+                      currentRow === row - 1 && col - 1 === currentCol ? 'waiting-input' : '',
                       completedRows.value && completedRows.value.has(row - 1) ? 'flip-animation' : '',
                       currentRow === row - 1 ? 'active-row' : 'inactive-row'
                     ]"
                   >
                     {{ guesses[row - 1]?.[col - 1] || '' }}
-                    <div v-if="(currentRow === row - 1 && currentCol === col) || (currentRow === row - 1 && col === 0 && !guesses[row - 1]?.length)" 
-                         class="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-indigo-500 rounded-full cursor-blink">
+                    <div v-if="currentRow === row - 1 && currentCol === col - 1" 
+                         class="absolute bottom-2 left-1/2 transform -translate-x-1/2 cursor-blink">
                     </div>
                   </div>
                 </div>
@@ -145,124 +152,143 @@
     </Teleport>
 
     <!-- کیبورد -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-lg p-4">
-      <div class="max-w-2xl mx-auto">
-        <template v-if="locale === 'fa'">
-          <div class="grid grid-cols-11 gap-1 mb-2">
-            <button
-              v-for="letter in 'ضصثقفغعهخحج'"
-              :key="letter"
-              @click="handleKeyPress({ key: letter })"
-              class="p-2 text-center rounded-lg transition-all duration-200"
-              :class="[
-                getKeyboardLetterClass(letter),
-                isLetterDisabled(letter) ? 'opacity-90 cursor-not-allowed bg-[#464b514d] text-[#646971] dark:bg-gray-600 dark:text-gray-400' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              ]"
-              :disabled="isLetterDisabled(letter) || gameOver"
-            >
-              {{ letter }}
-            </button>
-          </div>
-          <div class="grid grid-cols-10 gap-1 mb-2">
-            <button
-              v-for="letter in 'شسیبلاتنمک'"
-              :key="letter"
-              @click="handleKeyPress({ key: letter })"
-              class="p-2 text-center rounded-lg transition-all duration-200"
-              :class="[
-                getKeyboardLetterClass(letter),
-                isLetterDisabled(letter) ? 'opacity-90 cursor-not-allowed bg-[#464b514d] text-[#646971] dark:bg-gray-600 dark:text-gray-400' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              ]"
-              :disabled="isLetterDisabled(letter) || gameOver"
-            >
-              {{ letter }}
-            </button>
-          </div>
-          <div class="grid grid-cols-9 gap-1">
-            <button
-              v-for="letter in 'ظطزرذدپو'"
-              :key="letter"
-              @click="handleKeyPress({ key: letter })"
-              class="p-2 text-center rounded-lg transition-all duration-200"
-              :class="[
-                getKeyboardLetterClass(letter),
-                isLetterDisabled(letter) ? 'opacity-90 cursor-not-allowed bg-[#464b514d] text-[#646971] dark:bg-gray-600 dark:text-gray-400' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              ]"
-              :disabled="isLetterDisabled(letter) || gameOver"
-            >
-              {{ letter }}
-            </button>
-            <button
-              @click="handleKeyPress({ key: 'Backspace' })"
-              class="p-2 text-center rounded-lg bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 transition-all duration-200"
-              :disabled="gameOver"
-            >
-              <i class="fas fa-backspace"></i>
-            </button>
-          </div>
-        </template>
-        <template v-else>
-          <div class="grid grid-cols-10 gap-1 mb-2">
-            <button
-              v-for="letter in 'QWERTYUIOP'"
-              :key="letter"
-              @click="handleKeyPress({ key: letter.toLowerCase() })"
-              class="p-2 text-center rounded-lg transition-colors duration-200"
-              :class="[
-                getKeyboardLetterClass(letter.toLowerCase()),
-                isLetterDisabled(letter.toLowerCase()) ? 'opacity-50 cursor-not-allowed' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              ]"
-              :disabled="isLetterDisabled(letter.toLowerCase()) || gameOver"
-            >
-              {{ letter }}
-            </button>
-          </div>
-          <div class="grid grid-cols-9 gap-1 mb-2">
-            <button
-              v-for="letter in 'ASDFGHJKL'"
-              :key="letter"
-              @click="handleKeyPress({ key: letter.toLowerCase() })"
-              class="p-2 text-center rounded-lg transition-colors duration-200"
-              :class="[
-                getKeyboardLetterClass(letter.toLowerCase()),
-                isLetterDisabled(letter.toLowerCase()) ? 'opacity-50 cursor-not-allowed' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              ]"
-              :disabled="isLetterDisabled(letter.toLowerCase()) || gameOver"
-            >
-              {{ letter }}
-            </button>
-          </div>
-          <div class="grid grid-cols-8 gap-1">
-            <button
-              v-for="letter in 'ZXCVBNM'"
-              :key="letter"
-              @click="handleKeyPress({ key: letter.toLowerCase() })"
-              class="p-2 text-center rounded-lg transition-colors duration-200"
-              :class="[
-                getKeyboardLetterClass(letter.toLowerCase()),
-                isLetterDisabled(letter.toLowerCase()) ? 'opacity-50 cursor-not-allowed' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              ]"
-              :disabled="isLetterDisabled(letter.toLowerCase()) || gameOver"
-            >
-              {{ letter }}
-            </button>
-            <button
-              @click="handleKeyPress({ key: 'Backspace' })"
-              class="p-2 text-center rounded-lg bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 transition-colors duration-200"
-              :disabled="gameOver"
-            >
-              <i class="fas fa-backspace"></i>
-            </button>
-          </div>
-        </template>
-        <div class="mt-2">
-          <button
-            @click="handleKeyPress({ key: 'Enter' })"
-            class="w-full p-2 text-center rounded-lg bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 transition-colors duration-200"
-            :disabled="gameOver"
-          >
-            <i class="fas fa-check mr-2"></i>{{ t('submit') }}
-          </button>
+    <div class="fixed bottom-0 left-0 right-0">
+      <!-- نوار بالای کیبورد -->
+      <div 
+        @click="showKeyboard = !showKeyboard"
+        class="w-full bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm cursor-pointer flex justify-center items-center py-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 border-t border-gray-200 dark:border-gray-700"
+      >
+        <div class="w-16 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+      </div>
+      <!-- کیبورد -->
+      <div 
+        v-show="showKeyboard"
+        class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-lg p-4 transition-all duration-300 transform"
+        :class="showKeyboard ? 'translate-y-0' : 'translate-y-full'"
+      >
+        <div class="max-w-2xl mx-auto">
+          <template v-if="locale === 'fa'">
+            <div class="grid grid-cols-11 gap-1 mb-2">
+              <button
+                v-for="letter in 'ضصثقفغعهخحج'"
+                :key="letter"
+                @click="handleKeyPress({ key: letter })"
+                class="p-2 text-center rounded-lg transition-all duration-200"
+                :class="[
+                  getKeyboardLetterClass(letter),
+                  isLetterDisabled(letter) ? 'opacity-90 cursor-not-allowed bg-[#464b514d] text-[#646971] dark:bg-gray-600 dark:text-gray-400' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ]"
+                :disabled="isLetterDisabled(letter) || gameOver"
+              >
+                {{ letter }}
+              </button>
+            </div>
+            <div class="grid grid-cols-10 gap-1 mb-2">
+              <button
+                v-for="letter in 'شسیبلاتنمک'"
+                :key="letter"
+                @click="handleKeyPress({ key: letter })"
+                class="p-2 text-center rounded-lg transition-all duration-200"
+                :class="[
+                  getKeyboardLetterClass(letter),
+                  isLetterDisabled(letter) ? 'opacity-90 cursor-not-allowed bg-[#464b514d] text-[#646971] dark:bg-gray-600 dark:text-gray-400' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ]"
+                :disabled="isLetterDisabled(letter) || gameOver"
+              >
+                {{ letter }}
+              </button>
+            </div>
+            <div class="grid grid-cols-11 gap-1">
+              <button
+                v-for="letter in 'ظطزرذدپو'"
+                :key="letter"
+                @click="handleKeyPress({ key: letter })"
+                class="p-2 text-center rounded-lg transition-all duration-200"
+                :class="[
+                  getKeyboardLetterClass(letter),
+                  isLetterDisabled(letter) ? 'opacity-90 cursor-not-allowed bg-[#464b514d] text-[#646971] dark:bg-gray-600 dark:text-gray-400' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ]"
+                :disabled="isLetterDisabled(letter) || gameOver"
+              >
+                {{ letter }}
+              </button>
+              <button
+                @click="handleKeyPress({ key: 'Enter' })"
+                class="col-span-2 p-2 text-center rounded-lg bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 transition-all duration-200"
+                :disabled="gameOver"
+              >
+                {{ t('enter') }}
+              </button>
+              <button
+                @click="handleKeyPress({ key: 'Backspace' })"
+                class="p-2 text-center rounded-lg bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 transition-all duration-200"
+                :disabled="gameOver"
+              >
+                <i class="fas fa-backspace"></i>
+              </button>
+            </div>
+          </template>
+          <template v-else>
+            <div class="grid grid-cols-10 gap-1 mb-2">
+              <button
+                v-for="letter in 'QWERTYUIOP'"
+                :key="letter"
+                @click="handleKeyPress({ key: letter.toLowerCase() })"
+                class="p-2 text-center rounded-lg transition-colors duration-200"
+                :class="[
+                  getKeyboardLetterClass(letter.toLowerCase()),
+                  isLetterDisabled(letter.toLowerCase()) ? 'opacity-50 cursor-not-allowed' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ]"
+                :disabled="isLetterDisabled(letter.toLowerCase()) || gameOver"
+              >
+                {{ letter }}
+              </button>
+            </div>
+            <div class="grid grid-cols-9 gap-1 mb-2">
+              <button
+                v-for="letter in 'ASDFGHJKL'"
+                :key="letter"
+                @click="handleKeyPress({ key: letter.toLowerCase() })"
+                class="p-2 text-center rounded-lg transition-colors duration-200"
+                :class="[
+                  getKeyboardLetterClass(letter.toLowerCase()),
+                  isLetterDisabled(letter.toLowerCase()) ? 'opacity-50 cursor-not-allowed' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ]"
+                :disabled="isLetterDisabled(letter.toLowerCase()) || gameOver"
+              >
+                {{ letter }}
+              </button>
+            </div>
+            <div class="grid grid-cols-11 gap-1">
+              <button
+                v-for="letter in 'ZXCVBNM'"
+                :key="letter"
+                @click="handleKeyPress({ key: letter.toLowerCase() })"
+                class="p-2 text-center rounded-lg transition-colors duration-200"
+                :class="[
+                  getKeyboardLetterClass(letter.toLowerCase()),
+                  isLetterDisabled(letter.toLowerCase()) ? 'opacity-50 cursor-not-allowed' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ]"
+                :disabled="isLetterDisabled(letter.toLowerCase()) || gameOver"
+              >
+                {{ letter }}
+              </button>
+              <button
+                @click="handleKeyPress({ key: 'Enter' })"
+                class="col-span-2 p-2 text-center rounded-lg bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 transition-all duration-200"
+                :disabled="gameOver"
+              >
+                {{ t('enter') }}
+              </button>
+              <button
+                @click="handleKeyPress({ key: 'Backspace' })"
+                class="col-span-2 p-2 text-center rounded-lg bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 transition-all duration-200"
+                :disabled="gameOver"
+              >
+                <i class="fas fa-backspace"></i>
+              </button>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -271,11 +297,13 @@
 
 <script setup>
 import { useTranslations } from '../composables/useTranslations'
+import { useSounds } from '../composables/useSounds'
 import { useRouter } from 'vue-router'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useColorMode } from '#imports'
 
 const { t, locale, setLocale } = useTranslations()
+const { playSound, isSoundEnabled, toggleSound } = useSounds()
 const router = useRouter()
 const colorMode = useColorMode()
 const theme = computed(() => colorMode.value)
@@ -301,6 +329,7 @@ const username = ref('کاربر') // این مقدار باید از سیستم
 const disabledLetters = ref(new Set())
 const helpLetters = ref(new Set()) // برای ذخیره موقعیت حروف کمکی
 const revealedHelpLetters = ref(new Set()) // برای ذخیره حروفی که قبلاً به عنوان کمکی نشان داده شده‌اند
+const showKeyboard = ref(true) // برای نمایش/مخفی کردن کیبورد
 
 const maxGuesses = computed(() => {
   switch (difficulty.value) {
@@ -316,7 +345,11 @@ const maxGuesses = computed(() => {
 })
 
 const toggleTheme = () => {
-  colorMode.preference = colorMode.value === 'light' ? 'dark' : 'light'
+  const newTheme = colorMode.value === 'light' ? 'dark' : 'light'
+  colorMode.preference = newTheme
+  if (process.client) {
+    localStorage.setItem('preferredTheme', newTheme)
+  }
 }
 
 const getLetterClass = (letter, index, row) => {
@@ -425,51 +458,57 @@ const handleKeyPress = (event) => {
 
   const key = event.key?.toLowerCase() || event.toLowerCase()
   
-  if (key === 'backspace' || key === 'enter') {
-    if (key === 'backspace') {
-      if (currentCol.value > 0) {
-        // اگر حرف قبلی کمکی نیست، آن را پاک کن
-        const prevPosition = `${currentRow.value}-${currentCol.value - 1}`
-        if (!helpLetters.value.has(prevPosition)) {
-          currentCol.value--
-          guesses.value[currentRow.value][currentCol.value] = ''
-        }
-      }
-    } else if (key === 'enter') {
-      // بررسی اینکه آیا همه مربع‌ها پر هستند (چه با حروف عادی و چه با حروف کمکی)
-      const isRowComplete = guesses.value[currentRow.value]?.length === wordLength.value &&
-        guesses.value[currentRow.value].every(letter => letter !== '')
-      
-      if (isRowComplete) {
-        submitGuess()
+  if (key === 'backspace' || key === 'delete') {
+    if (currentCol.value > 0) {
+      playSound('backspace')
+      currentCol.value--
+      guesses.value[currentRow.value][currentCol.value] = ''
+    }
+    return
+  }
+
+  if (key === 'enter') {
+    if (currentCol.value === wordLength.value) {
+      // اگر حدس درست باشد
+      if (guesses.value[currentRow.value].join('') === correctWord.value) {
+        playSound('success')
+        gameWon.value = true
+        gameOver.value = true
+        showGameOverStats.value = true
+      } else if (currentRow.value === maxGuesses.value - 1) {
+        // اگر بازی تمام شده باشد
+        playSound('gameOver')
+        gameOver.value = true
+        showGameOverStats.value = true
+      } else {
+        // حدس اشتباه
+        playSound('error')
+        currentRow.value++
+        currentCol.value = 0
+        completedRows.value.add(currentRow.value - 1)
         updateDisabledLetters()
       }
     }
-  } else {
-    // بررسی اینکه آیا حرف معتبر است
-    const validLetters = locale.value === 'fa' 
-      ? 'ضصثقفغعهخحجشسیبلاتنمکظطزرذدپو'
-      : 'abcdefghijklmnopqrstuvwxyz'
-      
-    if (validLetters.includes(key) && currentCol.value < wordLength.value && !isLetterDisabled(key)) {
-      // اگر موقعیت فعلی حرف کمکی است، به دنبال موقعیت خالی بعدی برو
-      const currentPosition = `${currentRow.value}-${currentCol.value}`
-      if (helpLetters.value.has(currentPosition)) {
-        const nextEmpty = findNextEmptyPosition()
-        if (nextEmpty !== -1) {
-          currentCol.value = nextEmpty
-        }
-      }
-
-      if (!helpLetters.value.has(`${currentRow.value}-${currentCol.value}`)) {
-        if (!guesses.value[currentRow.value]) {
-          guesses.value[currentRow.value] = []
-        }
-        guesses.value[currentRow.value][currentCol.value] = key
-        currentCol.value++
-      }
-    }
+    return
   }
+
+  // برای حروف عادی
+  if (currentCol.value < wordLength.value && isValidKey(key)) {
+    playSound('type')
+    if (!guesses.value[currentRow.value]) {
+      guesses.value[currentRow.value] = []
+    }
+    guesses.value[currentRow.value][currentCol.value] = key
+    currentCol.value++
+  }
+}
+
+const isValidKey = (key) => {
+  if (!key) return false
+  const validLetters = locale.value === 'fa' 
+    ? 'ضصثقفغعهخحجشسیبلاتنمکظطزرذدپو'
+    : 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  return validLetters.includes(key)
 }
 
 const submitGuess = () => {
@@ -566,10 +605,18 @@ watch(locale, (newLocale) => {
 
 // اضافه کردن onMounted برای تنظیم جهت متن اولیه
 onMounted(() => {
-  // تنظیمات دیگر
+  // تنظیمات اولیه
   document.documentElement.dir = locale.value === 'fa' ? 'rtl' : 'ltr'
   document.documentElement.lang = locale.value
   document.body.style.textAlign = locale.value === 'fa' ? 'right' : 'left'
+  
+  // بازیابی تم از localStorage
+  if (process.client) {
+    const savedTheme = localStorage.getItem('preferredTheme')
+    if (savedTheme) {
+      colorMode.preference = savedTheme
+    }
+  }
   
   window.addEventListener('keydown', handleKeyPress)
 })
@@ -637,24 +684,50 @@ button:hover {
   animation: pulse 1s infinite;
 }
 
-/* اضافه کردن انیمیشن برای مربع فعال */
+/* استایل برای مربع فعال */
+.active-square {
+  animation: activeSquarePulse 2s infinite;
+  border-width: 2px !important;
+  border-color: #6366f1 !important;
+  background-color: rgba(99, 102, 241, 0.05) !important;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.2);
+}
+
+/* استایل برای مربع منتظر ورودی */
+.waiting-input {
+  border-width: 2px !important;
+  border-color: #818cf8 !important;
+  background-color: rgba(129, 140, 248, 0.05) !important;
+  box-shadow: 0 0 4px rgba(129, 140, 248, 0.15);
+}
+
 @keyframes activeSquarePulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(99, 102, 241, 0.2);
   }
-  70% {
-    box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+  50% {
+    box-shadow: 0 0 8px rgba(99, 102, 241, 0.3);
   }
 }
 
-.active-square {
-  animation: activeSquarePulse 2s infinite;
-  border-width: 3px;
-  transform: scale(1.05);
-  background-color: rgba(99, 102, 241, 0.05);
+/* نشانگر چشمک‌زن */
+.cursor-blink {
+  animation: blink 1s infinite;
+  width: 2px !important;
+  height: 2px !important;
+  background-color: #6366f1 !important;
+  border-radius: 50%;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
 }
 
 /* بهبود انیمیشن hover */

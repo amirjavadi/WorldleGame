@@ -1,6 +1,6 @@
 import { useAuth } from '~/composables/useAuth'
 
-export default defineNuxtRouteMiddleware((to) => {
+export default defineNuxtRouteMiddleware((to, from) => {
   // Skip auth check on server-side
   if (process.server) return
   
@@ -12,7 +12,7 @@ export default defineNuxtRouteMiddleware((to) => {
   }
 
   // Check if user is authenticated or is a guest
-  if (!checkAuth()) {
+  if (!checkAuth() && to.path !== '/login' && to.path !== '/register') {
     return navigateTo('/login')
   }
 }) 

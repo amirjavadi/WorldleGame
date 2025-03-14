@@ -1,8 +1,16 @@
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useHead } from '#imports'
 
 export const useTranslations = () => {
-  const locale = ref(process.client ? localStorage.getItem('locale') || 'fa' : 'fa')
+  // ایمن‌سازی دسترسی به localStorage
+  const getStoredLocale = () => {
+    if (process.client) {
+      return localStorage.getItem('preferredLocale') || 'fa'
+    }
+    return 'fa'
+  }
+
+  const locale = ref(getStoredLocale())
   const dir = computed(() => locale.value === 'fa' ? 'rtl' : 'ltr')
 
   const translations = {
@@ -20,7 +28,41 @@ export const useTranslations = () => {
       guest: 'مهمان',
       email: 'ایمیل',
       invalidEmail: 'لطفا یک ایمیل معتبر وارد کنید',
-      playAsGuest: 'ورود به عنوان مهمان'
+      playAsGuest: 'ورود به عنوان مهمان',
+      // Game related translations
+      gameTitle: 'بازی وردل فارسی',
+      guessWord: 'کلمه را حدس بزنید',
+      submit: 'ارسال',
+      enter: 'ارسال',
+      backspace: 'پاک کردن',
+      score: 'امتیاز',
+      attempts: 'تلاش‌ها',
+      gameOver: 'بازی تمام شد',
+      youWon: 'شما برنده شدید!',
+      youLost: 'شما باختید!',
+      tryAgain: 'تلاش مجدد',
+      leaderboard: 'جدول امتیازات',
+      rank: 'رتبه',
+      player: 'بازیکن',
+      guestPlayer: 'بازیکن مهمان',
+      invalidWord: 'کلمه نامعتبر',
+      wordTooShort: 'کلمه باید ۵ حرفی باشد',
+      statistics: 'آمار بازی',
+      totalGames: 'کل بازی‌ها',
+      gamesPlayed: 'بازی‌های انجام شده',
+      winRate: 'درصد برد',
+      currentStreak: 'برد متوالی فعلی',
+      maxStreak: 'بیشترین برد متوالی',
+      bestStreak: 'بهترین رکورد',
+      averageAttempts: 'میانگین تلاش‌ها',
+      playAgain: 'بازی مجدد',
+      easy: 'آسان',
+      medium: 'متوسط',
+      hard: 'سخت',
+      difficulty: 'سختی بازی',
+      noHelpLeft: 'راهنمایی باقی نمانده است',
+      noNewHelpAvailable: 'راهنمایی جدیدی در دسترس نیست',
+      logout: 'خروج'
     },
     en: {
       welcome: 'Welcome',
@@ -36,7 +78,41 @@ export const useTranslations = () => {
       guest: 'Guest',
       email: 'Email',
       invalidEmail: 'Please enter a valid email address',
-      playAsGuest: 'Play as Guest'
+      playAsGuest: 'Play as Guest',
+      // Game related translations
+      gameTitle: 'Persian Wordle Game',
+      guessWord: 'Guess the Word',
+      submit: 'Submit',
+      enter: 'Enter',
+      backspace: 'Backspace',
+      score: 'Score',
+      attempts: 'Attempts',
+      gameOver: 'Game Over',
+      youWon: 'You Won!',
+      youLost: 'You Lost!',
+      tryAgain: 'Try Again',
+      leaderboard: 'Leaderboard',
+      rank: 'Rank',
+      player: 'Player',
+      guestPlayer: 'Guest Player',
+      invalidWord: 'Invalid Word',
+      wordTooShort: 'Word must be 5 letters',
+      statistics: 'Statistics',
+      totalGames: 'Total Games',
+      gamesPlayed: 'Games Played',
+      winRate: 'Win Rate',
+      currentStreak: 'Current Streak',
+      maxStreak: 'Max Streak',
+      bestStreak: 'Best Streak',
+      averageAttempts: 'Average Attempts',
+      playAgain: 'Play Again',
+      easy: 'Easy',
+      medium: 'Medium',
+      hard: 'Hard',
+      difficulty: 'Difficulty',
+      noHelpLeft: 'No help remaining',
+      noNewHelpAvailable: 'No new help available',
+      logout: 'Logout'
     }
   }
 
@@ -47,7 +123,7 @@ export const useTranslations = () => {
   const setLocale = (newLocale) => {
     locale.value = newLocale
     if (process.client) {
-      localStorage.setItem('locale', newLocale)
+      localStorage.setItem('preferredLocale', newLocale)
     }
   }
 
