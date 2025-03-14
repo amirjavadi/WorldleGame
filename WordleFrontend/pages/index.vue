@@ -52,10 +52,10 @@
                   <div
                     v-for="col in wordLength"
                     :key="col"
-                    class="w-12 h-12 flex items-center justify-center text-2xl font-bold rounded-lg border-2 cursor-pointer transition-all duration-200 hover:border-indigo-500"
+                    class="w-12 h-12 flex items-center justify-center text-2xl font-bold rounded-lg border-2 cursor-pointer transition-all duration-200 hover:border-indigo-500 relative"
                     :class="[
                       getLetterClass(guesses[row - 1]?.[col - 1], col - 1, row),
-                      currentRow === row - 1 && currentCol === col ? 'border-indigo-500 ring-2 ring-indigo-500 shadow-lg' : '',
+                      currentRow === row - 1 && currentCol === col ? 'border-indigo-500 ring-4 ring-indigo-200 dark:ring-indigo-900 shadow-lg active-square' : '',
                       completedRows.value && completedRows.value.has(row - 1) ? 'flip-animation' : ''
                     ]"
                   >
@@ -381,5 +381,56 @@ onUnmounted(() => {
 
 button:hover {
   animation: pulse 1s infinite;
+}
+
+/* اضافه کردن انیمیشن برای مربع فعال */
+@keyframes activeSquarePulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+  }
+}
+
+.active-square {
+  animation: activeSquarePulse 2s infinite;
+  border-width: 3px;
+  transform: scale(1.05);
+}
+
+/* بهبود انیمیشن hover */
+.w-12.h-12:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease-in-out;
+}
+
+/* اضافه کردن افکت درخشان برای مربع‌های فعال */
+.active-square::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.3));
+  border-radius: 0.5rem;
+  z-index: -1;
+  animation: glowPulse 2s infinite;
+}
+
+@keyframes glowPulse {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
 }
 </style> 
