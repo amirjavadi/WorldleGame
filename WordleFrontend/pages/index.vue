@@ -1,15 +1,15 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <header class="bg-white dark:bg-gray-800 shadow">
+  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <header class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg">
       <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center">
-          <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-white font-display">
             {{ t('gameTitle') }}
           </h1>
           <div class="flex items-center space-x-4">
             <select
               v-model="difficulty"
-              class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              class="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
               @change="resetGame"
             >
               <option value="easy">{{ t('easy') }}</option>
@@ -18,19 +18,19 @@
             </select>
             <button
               @click="setLocale(locale === 'fa' ? 'en' : 'fa')"
-              class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+              class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
             >
               {{ t('language') }}
             </button>
             <button
               @click="toggleTheme"
-              class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+              class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
             >
               {{ t(theme === 'light' ? 'dark' : 'light') }}
             </button>
             <button
               @click="handleLogout"
-              class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+              class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
             >
               {{ t('logout') }}
             </button>
@@ -43,8 +43,8 @@
       <div class="px-4 py-6 sm:px-0">
         <div class="flex flex-col items-center space-y-8">
           <div class="w-full max-w-md">
-            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-              <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl rounded-xl p-6 transform hover:scale-[1.02] transition-all duration-300">
+              <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 font-display">
                 {{ t('guessWord') }}
               </h2>
               <div class="space-y-4">
@@ -52,10 +52,10 @@
                   <div
                     v-for="col in wordLength"
                     :key="col"
-                    class="w-12 h-12 flex items-center justify-center text-2xl font-bold rounded border-2 cursor-pointer"
+                    class="w-12 h-12 flex items-center justify-center text-2xl font-bold rounded-lg border-2 cursor-pointer transition-all duration-200 hover:border-indigo-500"
                     :class="[
                       getLetterClass(guesses[row - 1]?.[col - 1], col - 1, row),
-                      currentRow === row - 1 && currentCol === col ? 'border-indigo-500 ring-2 ring-indigo-500' : '',
+                      currentRow === row - 1 && currentCol === col ? 'border-indigo-500 ring-2 ring-indigo-500 shadow-lg' : '',
                       completedRows.value && completedRows.value.has(row - 1) ? 'flip-animation' : ''
                     ]"
                   >
@@ -63,13 +63,13 @@
                   </div>
                 </div>
                 <div v-if="gameOver" class="text-center">
-                  <p class="text-xl font-bold mb-4">
+                  <p class="text-xl font-bold mb-4 text-gray-900 dark:text-white">
                     {{ gameWon ? t('win') : t('lose') }}
                   </p>
-                  <p class="mb-4">{{ t('correctWord') }}: {{ correctWord }}</p>
+                  <p class="mb-4 text-gray-700 dark:text-gray-300">{{ t('correctWord') }}: {{ correctWord }}</p>
                   <button
                     @click="resetGame"
-                    class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+                    class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
                   >
                     {{ t('playAgain') }}
                   </button>
@@ -78,7 +78,7 @@
                   <div class="flex justify-between items-center">
                     <button
                       @click="useHelp"
-                      class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 flex items-center space-x-2"
+                      class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 flex items-center space-x-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
                     >
                       <span>{{ t('help') }}</span>
                       <span class="bg-white text-purple-600 rounded-full w-6 h-6 flex items-center justify-center">
@@ -92,12 +92,12 @@
           </div>
 
           <div class="w-full max-w-md">
-            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-              <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl rounded-xl p-6 transform hover:scale-[1.02] transition-all duration-300">
+              <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 font-display">
                 {{ t('score') }}
               </h2>
               <div class="text-center">
-                <p class="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+                <p class="text-4xl font-bold text-indigo-600 dark:text-indigo-400">
                   {{ score }}
                 </p>
               </div>
@@ -105,12 +105,12 @@
           </div>
 
           <div class="w-full max-w-md">
-            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-              <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl rounded-xl p-6 transform hover:scale-[1.02] transition-all duration-300">
+              <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 font-display">
                 {{ t('statistics') }}
               </h2>
               <div class="grid grid-cols-2 gap-4">
-                <div class="text-center">
+                <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <p class="text-2xl font-bold text-gray-900 dark:text-white">
                     {{ gamesPlayed }}
                   </p>
@@ -118,7 +118,7 @@
                     {{ t('gamesPlayed') }}
                   </p>
                 </div>
-                <div class="text-center">
+                <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <p class="text-2xl font-bold text-gray-900 dark:text-white">
                     {{ winRate }}%
                   </p>
@@ -126,7 +126,7 @@
                     {{ t('winRate') }}
                   </p>
                 </div>
-                <div class="text-center">
+                <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <p class="text-2xl font-bold text-gray-900 dark:text-white">
                     {{ currentStreak }}
                   </p>
@@ -134,7 +134,7 @@
                     {{ t('currentStreak') }}
                   </p>
                 </div>
-                <div class="text-center">
+                <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <p class="text-2xl font-bold text-gray-900 dark:text-white">
                     {{ bestStreak }}
                   </p>
@@ -154,7 +154,7 @@
 <script setup>
 import { useTranslations } from '../composables/useTranslations'
 import { useRouter } from 'vue-router'
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 
 const { t, locale, setLocale } = useTranslations()
 const router = useRouter()
@@ -315,6 +315,23 @@ const handleLogout = () => {
   router.push('/login')
 }
 
+// اضافه کردن computed property برای جهت متن
+const textDirection = computed(() => {
+  return locale.value === 'fa' ? 'rtl' : 'ltr'
+})
+
+// اضافه کردن watch برای تغییر جهت متن
+watch(locale, (newLocale) => {
+  document.documentElement.dir = newLocale === 'fa' ? 'rtl' : 'ltr'
+  document.documentElement.lang = newLocale
+})
+
+// اضافه کردن onMounted برای تنظیم جهت متن اولیه
+onMounted(() => {
+  document.documentElement.dir = locale.value === 'fa' ? 'rtl' : 'ltr'
+  document.documentElement.lang = locale.value
+})
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeyPress)
 })
@@ -324,7 +341,13 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap');
+
+.font-display {
+  font-family: 'Vazirmatn', sans-serif;
+}
+
 @keyframes flip {
   0% {
     transform: rotateX(0deg);
@@ -341,5 +364,22 @@ onUnmounted(() => {
   animation: flip 0.6s ease-in-out;
   transform-style: preserve-3d;
   perspective: 1000px;
+}
+
+/* اضافه کردن انیمیشن برای دکمه‌ها */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+button:hover {
+  animation: pulse 1s infinite;
 }
 </style> 
