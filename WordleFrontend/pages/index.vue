@@ -298,6 +298,7 @@ const showGameOverStats = ref(false)
 const username = ref('کاربر') // این مقدار باید از سیستم احراز هویت دریافت شود
 const disabledLetters = ref(new Set())
 const helpLetters = ref(new Set()) // برای ذخیره موقعیت حروف کمکی
+const revealedHelpLetters = ref(new Set()) // برای ذخیره حروفی که قبلاً به عنوان کمکی نشان داده شده‌اند
 
 const maxGuesses = computed(() => {
   switch (difficulty.value) {
@@ -351,32 +352,36 @@ const useHelp = () => {
     return
   }
 
-  // پیدا کردن موقعیت‌های خالی در سطر فعلی
-  const emptyPositions = []
+  // پیدا کردن موقعیت‌های خالی در سطر فعلی و حروف متناظر آنها که قبلاً نشان داده نشده‌اند
+  const availablePositions = []
   for (let i = 0; i < wordLength.value; i++) {
-    if (!guesses.value[currentRow.value]?.[i] && !helpLetters.value.has(`${currentRow.value}-${i}`)) {
-      emptyPositions.push(i)
+    const letter = correctWord.value[i]
+    if (!guesses.value[currentRow.value]?.[i] && 
+        !helpLetters.value.has(`${currentRow.value}-${i}`) && 
+        !revealedHelpLetters.value.has(letter)) {
+      availablePositions.push({ index: i, letter })
     }
   }
 
-  if (emptyPositions.length === 0) {
-    alert(t('rowIsFull'))
+  if (availablePositions.length === 0) {
+    alert(t('noNewHelpAvailable'))
     return
   }
 
-  // انتخاب یک موقعیت تصادفی از موقعیت‌های خالی
-  const randomEmptyPosition = emptyPositions[Math.floor(Math.random() * emptyPositions.length)]
+  // انتخاب یک موقعیت تصادفی از موقعیت‌های موجود
+  const randomPosition = availablePositions[Math.floor(Math.random() * availablePositions.length)]
 
   // قرار دادن حرف درست در موقعیت انتخاب شده
   if (!guesses.value[currentRow.value]) {
     guesses.value[currentRow.value] = []
   }
-  guesses.value[currentRow.value][randomEmptyPosition] = correctWord.value[randomEmptyPosition]
-  helpLetters.value.add(`${currentRow.value}-${randomEmptyPosition}`)
+  guesses.value[currentRow.value][randomPosition.index] = randomPosition.letter
+  helpLetters.value.add(`${currentRow.value}-${randomPosition.index}`)
+  revealedHelpLetters.value.add(randomPosition.letter)
 
   // انتقال فوکوس به اولین مربع خالی
   const nextEmpty = findNextEmptyPosition()
-  currentCol.value = nextEmpty !== -1 ? nextEmpty : randomEmptyPosition + 1
+  currentCol.value = nextEmpty !== -1 ? nextEmpty : randomPosition.index + 1
 
   helpCount.value--
 }
@@ -410,7 +415,11 @@ const handleKeyPress = (event) => {
         }
       }
     } else if (key === 'enter') {
-      if (currentCol.value === wordLength.value) {
+      // بررسی اینکه آیا همه مربع‌ها پر هستند (چه با حروف عادی و چه با حروف کمکی)
+      const isRowComplete = guesses.value[currentRow.value]?.length === wordLength.value &&
+        guesses.value[currentRow.value].every(letter => letter !== '')
+      
+      if (isRowComplete) {
         submitGuess()
         updateDisabledLetters()
       }
@@ -481,7 +490,8 @@ const resetGame = () => {
   revealedLetters.value = []
   completedRows.value.clear()
   disabledLetters.value.clear()
-  helpLetters.value.clear() // پاک کردن حروف کمکی
+  helpLetters.value.clear()
+  revealedHelpLetters.value.clear() // پاک کردن حروف کمکی نشان داده شده در بازی قبلی
   // TODO: Get new word based on difficulty
 }
 
@@ -705,23 +715,6 @@ button:hover {
     transform: scale(1);
     box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
   }
-}
-
-/* انیمیشن برای آیکن‌ها */
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
-}
-
-.fas {
-  animation: float 3s ease-in-out infinite;
 }
 
 /* انیمیشن برای لامپ راهنما */
