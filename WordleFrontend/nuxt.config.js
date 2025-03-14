@@ -8,8 +8,10 @@ export default defineNuxtConfig({
   ],
   colorMode: {
     classSuffix: '',
-    preference: 'system',
-    fallback: 'light'
+    preference: 'light',
+    fallback: 'light',
+    dataValue: 'theme',
+    storageKey: 'theme'
   },
   runtimeConfig: {
     public: {
@@ -20,5 +22,24 @@ export default defineNuxtConfig({
   css: [
     '@/assets/css/main.css',
     '@fortawesome/fontawesome-free/css/all.css'
-  ]
+  ],
+  app: {
+    head: {
+      htmlAttrs: {
+        lang: 'fa'
+      }
+    }
+  },
+  tailwindcss: {
+    darkMode: 'class',
+    config: {
+      content: [
+        './components/**/*.{js,vue,ts}',
+        './layouts/**/*.vue',
+        './pages/**/*.vue',
+        './plugins/**/*.{js,ts}',
+        './nuxt.config.{js,ts}',
+      ]
+    }
+  }
 }) 

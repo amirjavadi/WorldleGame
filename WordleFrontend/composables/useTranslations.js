@@ -46,7 +46,9 @@ const translations = {
     helpCount: 'تعداد کمک‌ها',
     helpUsed: 'یک حرف درست نشان داده شد',
     noHelpLeft: 'کمکی باقی نمانده است',
-    rowIsFull: 'سطر فعلی پر است'
+    rowIsFull: 'سطر فعلی پر است',
+    noNewHelpAvailable: 'حرف جدیدی برای نمایش وجود ندارد',
+    ok: 'تایید'
   },
   en: {
     welcome: 'Welcome',
@@ -93,7 +95,9 @@ const translations = {
     helpCount: 'Help Count',
     helpUsed: 'One correct letter revealed',
     noHelpLeft: 'No help left',
-    rowIsFull: 'Current row is full'
+    rowIsFull: 'Current row is full',
+    noNewHelpAvailable: 'No new letter available to reveal',
+    ok: 'OK'
   }
 }
 

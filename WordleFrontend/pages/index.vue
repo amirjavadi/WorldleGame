@@ -273,10 +273,12 @@
 import { useTranslations } from '../composables/useTranslations'
 import { useRouter } from 'vue-router'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useColorMode } from '#imports'
 
 const { t, locale, setLocale } = useTranslations()
 const router = useRouter()
-const theme = ref('light')
+const colorMode = useColorMode()
+const theme = computed(() => colorMode.value)
 const difficulty = ref('medium')
 const guesses = ref([])
 const currentRow = ref(0)
@@ -314,8 +316,7 @@ const maxGuesses = computed(() => {
 })
 
 const toggleTheme = () => {
-  theme.value = theme.value === 'light' ? 'dark' : 'light'
-  document.documentElement.classList.toggle('dark')
+  colorMode.preference = colorMode.value === 'light' ? 'dark' : 'light'
 }
 
 const getLetterClass = (letter, index, row) => {
@@ -545,12 +546,11 @@ watch(locale, (newLocale) => {
 
 // اضافه کردن onMounted برای تنظیم جهت متن اولیه
 onMounted(() => {
+  // تنظیمات دیگر
   document.documentElement.dir = locale.value === 'fa' ? 'rtl' : 'ltr'
   document.documentElement.lang = locale.value
   document.body.style.textAlign = locale.value === 'fa' ? 'right' : 'left'
-})
-
-onMounted(() => {
+  
   window.addEventListener('keydown', handleKeyPress)
 })
 
