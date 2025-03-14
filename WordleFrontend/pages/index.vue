@@ -55,11 +55,12 @@
                     class="w-12 h-12 flex items-center justify-center text-2xl font-bold rounded-lg border-2 cursor-pointer transition-all duration-200 hover:border-indigo-500 relative"
                     :class="[
                       getLetterClass(guesses[row - 1]?.[col - 1], col - 1, row),
-                      currentRow === row - 1 && currentCol === col ? 'border-indigo-500 ring-4 ring-indigo-200 dark:ring-indigo-900 shadow-lg active-square' : '',
+                      currentRow === row - 1 && currentCol === col ? 'border-indigo-500 ring-4 ring-indigo-200 dark:ring-indigo-900 shadow-lg active-square cursor-text' : '',
                       completedRows.value && completedRows.value.has(row - 1) ? 'flip-animation' : ''
                     ]"
                   >
                     {{ guesses[row - 1]?.[col - 1] || '' }}
+                    <div v-if="currentRow === row - 1 && currentCol === col" class="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-indigo-500 rounded-full cursor-blink"></div>
                   </div>
                 </div>
                 <div v-if="gameOver" class="text-center">
@@ -400,6 +401,7 @@ button:hover {
   animation: activeSquarePulse 2s infinite;
   border-width: 3px;
   transform: scale(1.05);
+  background-color: rgba(99, 102, 241, 0.05);
 }
 
 /* بهبود انیمیشن hover */
@@ -424,13 +426,38 @@ button:hover {
 
 @keyframes glowPulse {
   0% {
-    opacity: 0.5;
+    opacity: 0.3;
   }
   50% {
-    opacity: 1;
+    opacity: 0.6;
   }
   100% {
-    opacity: 0.5;
+    opacity: 0.3;
   }
+}
+
+/* اضافه کردن انیمیشن چشمک زن برای نشانگر */
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.cursor-blink {
+  animation: blink 1s infinite;
+}
+
+/* تغییر نشانگر موس برای مربع فعال */
+.cursor-text {
+  cursor: text;
+}
+
+/* بهبود افکت hover برای مربع‌های غیرفعال */
+.w-12.h-12:not(.active-square):hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease-in-out;
 }
 </style> 
