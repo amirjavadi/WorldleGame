@@ -17,7 +17,10 @@ export const useTranslations = () => {
       noAccount: 'حساب کاربری ندارید؟',
       haveAccount: 'حساب کاربری دارید؟',
       passwordsDoNotMatch: 'رمز عبور و تکرار آن مطابقت ندارند',
-      guest: 'مهمان'
+      guest: 'مهمان',
+      email: 'ایمیل',
+      invalidEmail: 'لطفا یک ایمیل معتبر وارد کنید',
+      playAsGuest: 'ورود به عنوان مهمان'
     },
     en: {
       welcome: 'Welcome',
@@ -30,7 +33,10 @@ export const useTranslations = () => {
       noAccount: "Don't have an account?",
       haveAccount: 'Already have an account?',
       passwordsDoNotMatch: 'Passwords do not match',
-      guest: 'Guest'
+      guest: 'Guest',
+      email: 'Email',
+      invalidEmail: 'Please enter a valid email address',
+      playAsGuest: 'Play as Guest'
     }
   }
 

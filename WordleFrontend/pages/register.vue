@@ -33,7 +33,7 @@
         </div>
 
         <!-- Register Form -->
-        <form @submit.prevent="handleRegister" class="space-y-6">
+        <form @submit.prevent="handleSubmit" class="space-y-6">
           <!-- Error Message -->
           <div v-if="error" class="bg-red-100 dark:bg-red-900/50 border border-red-500/50 rounded-lg p-4 animate-shake">
             <p class="text-red-600 dark:text-red-200 text-sm text-center">{{ error }}</p>
@@ -43,10 +43,23 @@
           <div class="game-input-container">
             <input
               id="username"
-              v-model="username"
+              v-model="form.username"
               type="text"
               required
               :placeholder="t('username')"
+              class="game-input w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-400 focus:ring-2 focus:ring-green-500/50 dark:focus:ring-green-400/50 transition-all duration-300"
+            />
+            <div class="input-glow"></div>
+          </div>
+
+          <!-- Email Input -->
+          <div class="game-input-container">
+            <input
+              id="email"
+              v-model="form.email"
+              type="email"
+              required
+              :placeholder="t('email')"
               class="game-input w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-green-500 dark:focus:border-green-400 focus:ring-2 focus:ring-green-500/50 dark:focus:ring-green-400/50 transition-all duration-300"
             />
             <div class="input-glow"></div>
@@ -56,7 +69,7 @@
           <div class="game-input-container">
             <input
               id="password"
-              v-model="password"
+              v-model="form.password"
               type="password"
               required
               :placeholder="t('password')"
@@ -69,7 +82,7 @@
           <div class="game-input-container">
             <input
               id="confirmPassword"
-              v-model="confirmPassword"
+              v-model="form.confirmPassword"
               type="password"
               required
               :placeholder="t('confirmPassword')"
@@ -126,25 +139,32 @@
 const { t, locale, setLocale, dir } = useTranslations()
 const router = useRouter()
 const { register, loading, error } = useAuth()
-const username = ref('')
-const password = ref('')
-const confirmPassword = ref('')
+
+const form = reactive({
+  username: '',
+  email: '',
+  password: '',
+  confirmPassword: ''
+})
 
 const toggleLocale = () => {
   setLocale(locale.value === 'fa' ? 'en' : 'fa')
 }
 
-const handleRegister = async () => {
-  if (password.value !== confirmPassword.value) {
-    alert(t('passwordsDoNotMatch'))
+const handleSubmit = async () => {
+  if (form.password !== form.confirmPassword) {
+    error.value = t('passwordsDoNotMatch')
+    return
+  }
+  
+  if (!form.email || !form.email.includes('@')) {
+    error.value = t('invalidEmail')
     return
   }
 
-  try {
-    await register(username.value, password.value)
-    router.push('/login')
-  } catch (error) {
-    console.error(error)
+  const success = await register(form.username, form.email, form.password)
+  if (success) {
+    router.push('/')
   }
 }
 </script>
