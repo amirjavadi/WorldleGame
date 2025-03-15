@@ -1,134 +1,123 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import axios from 'axios'
-import { useNotification } from '~/composables/useNotification'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref(null)
-  const token = ref(null)
-  const loading = ref(false)
-  const { addNotification } = useNotification()
   const router = useRouter()
+  const isAuthenticated = ref(false)
+  const username = ref('')
+  const isGuest = ref(false)
 
-  const isAuthenticated = computed(() => {
-    console.log('Auth state:', { token: token.value, user: user.value })
-    return !!token.value && !!user.value
-  })
-  const username = computed(() => user.value?.username)
-
-  const initializeAuth = () => {
-    console.log('Initializing auth...')
-    if (process.client) {
-      const savedToken = localStorage.getItem('auth-token')
-      const savedUser = localStorage.getItem('auth-user')
-      console.log('Saved data:', { savedToken, savedUser })
-      
-      if (savedToken && savedUser) {
-        token.value = savedToken
-        try {
-          user.value = JSON.parse(savedUser)
-        } catch {
-          user.value = savedUser
-        }
-        console.log('Auth initialized with:', { token: token.value, user: user.value })
-        axios.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`
-      }
-    }
-  }
-
-  const register = async (userData) => {
-    try {
-      loading.value = true
-      const response = await axios.post('/api/auth/register', userData)
-      addNotification('ثبت‌نام با موفقیت انجام شد. لطفاً وارد شوید.', 'success')
-      router.push('/login')
-      return true
-    } catch (error) {
-      console.error('Register error:', error)
-      addNotification(error.response?.data?.message || 'خطا در ثبت‌نام', 'error')
-      return false
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const login = async (credentials) => {
-    try {
-      loading.value = true
-      const response = await axios.post('/api/auth/login', credentials)
-      console.log('Login response:', response.data)
-      const { token: newToken, user: userData } = response.data
-      
-      token.value = newToken
-      user.value = userData
-      
-      if (process.client) {
-        localStorage.setItem('auth-token', newToken)
-        localStorage.setItem('auth-user', JSON.stringify(userData))
-      }
-      
-      axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
-      
-      addNotification('خوش آمدید!', 'success')
-      router.push('/')
-      return true
-    } catch (error) {
-      console.error('Login error:', error)
-      addNotification(error.response?.data?.message || 'خطا در ورود', 'error')
-      return false
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const logout = () => {
-    console.log('Logging out...')
-    token.value = null
-    user.value = null
-    
-    if (process.client) {
-      localStorage.removeItem('auth-token')
-      localStorage.removeItem('auth-user')
-    }
-    
-    delete axios.defaults.headers.common['Authorization']
-    router.push('/login')
-    addNotification('با موفقیت خارج شدید', 'info')
-  }
-
+  // تابع برای بررسی وضعیت احراز هویت
   const checkAuth = async () => {
     try {
-      if (!token.value) return false
-      const response = await axios.get('/api/auth/check')
-      return true
+      const token = localStorage.getItem('token')
+      const storedUsername = localStorage.getItem('username')
+      const isGuestUser = localStorage.getItem('isGuest')
+      
+      if (token) {
+        const response = await fetch('http://localhost:5275/api/auth/verify', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          isAuthenticated.value = true
+          username.value = storedUsername || data.username
+          localStorage.setItem('username', username.value)
+          isGuest.value = false
+        } else {
+          await logout()
+        }
+      } else if (isGuestUser === 'true') {
+        isGuest.value = true
+        username.value = 'مهمان'
+        isAuthenticated.value = false
+        // مهمان نباید به صفحه لاگین هدایت شود
+      } else {
+        isGuest.value = false
+        isAuthenticated.value = false
+        username.value = ''
+        router.push('/login')
+      }
     } catch (error) {
-      console.error('Check auth error:', error)
-      logout()
-      return false
+      console.error('Error checking auth:', error)
+      await logout()
     }
   }
 
-  // اجرای initializeAuth در زمان ایجاد store
+  // تابع لاگین
+  const login = async (credentials) => {
+    try {
+      const response = await fetch('http://localhost:5275/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(credentials)
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('username', data.username)
+        localStorage.removeItem('isGuest') // پاک کردن وضعیت مهمان در صورت لاگین
+        isAuthenticated.value = true
+        username.value = data.username
+        isGuest.value = false
+        router.push('/')
+        return { success: true }
+      } else {
+        const error = await response.json()
+        return { success: false, error: error.message }
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      return { success: false, error: 'خطا در ارتباط با سرور' }
+    }
+  }
+
+  // تابع لاگ‌اوت
+  const logout = async () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('username')
+    localStorage.removeItem('isGuest')
+    isAuthenticated.value = false
+    username.value = ''
+    isGuest.value = false
+    router.push('/login')
+  }
+
+  // تابع ورود به عنوان مهمان
+  const loginAsGuest = () => {
+    isGuest.value = true
+    username.value = 'مهمان'
+    isAuthenticated.value = false
+    localStorage.setItem('isGuest', 'true')
+    localStorage.removeItem('token') // اطمینان از پاک شدن توکن قبلی
+    localStorage.removeItem('username') // اطمینان از پاک شدن نام کاربری قبلی
+    router.push('/')
+  }
+
+  // بررسی اولیه وضعیت احراز هویت
   if (process.client) {
-    initializeAuth()
+    checkAuth()
   }
 
   return {
-    user,
-    token,
-    loading,
     isAuthenticated,
     username,
-    register,
+    isGuest,
     login,
     logout,
-    checkAuth,
-    initializeAuth
+    loginAsGuest,
+    checkAuth
   }
 }, {
   persist: {
     storage: localStorage,
-    paths: ['user', 'token']
+    paths: ['isAuthenticated', 'username', 'isGuest']
   }
 }) 
