@@ -1,18 +1,18 @@
-import { useAuth } from '~/composables/useAuth'
+import { useAuthStore } from '~/stores/auth'
+import { useNotification } from '~/composables/useNotification'
 
-export default defineNuxtRouteMiddleware((to, from) => {
-  // Skip auth check on server-side
-  if (process.server) return
-  
-  const { checkAuth } = useAuth()
-  
-  // Allow access to auth pages (login/register) without authentication
-  if (to.path === '/login' || to.path === '/register') {
-    return
+export default defineNuxtRouteMiddleware(async (to) => {
+  const authStore = useAuthStore()
+  const { addNotification } = useNotification()
+  const publicPages = ['/login', '/register']
+  const authRequired = !publicPages.includes(to.path)
+
+  if (!authStore.isAuthenticated && authRequired) {
+    addNotification('لطفاً ابتدا وارد شوید', 'info')
+    return navigateTo('/login')
   }
 
-  // Check if user is authenticated or is a guest
-  if (!checkAuth() && to.path !== '/login' && to.path !== '/register') {
-    return navigateTo('/login')
+  if (authStore.isAuthenticated && publicPages.includes(to.path)) {
+    return navigateTo('/')
   }
 }) 

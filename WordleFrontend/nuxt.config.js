@@ -1,22 +1,36 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  devtools: { enabled: true },
+  devtools: { enabled: false },
+  ssr: false,
   modules: [
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
-    '@nuxtjs/color-mode'
+    '@nuxtjs/color-mode',
+    'pinia-plugin-persistedstate/nuxt'
   ],
   plugins: ['~/plugins/vuetify.js'],
   colorMode: {
     classSuffix: '',
-    preference: 'light',
+    preference: 'system',
     fallback: 'light',
     dataValue: 'theme',
-    storageKey: 'theme'
+    storageKey: 'nuxt-color-mode',
+    classPrefix: '',
+    componentName: 'ColorScheme',
+    globalName: '__NUXT_COLOR_MODE__',
+    storageMode: 'localStorage',
+    classNames: {
+      light: 'light',
+      dark: 'dark'
+    }
+  },
+  piniaPluginPersistedstate: {
+    storage: 'localStorage',
+    debug: true
   },
   runtimeConfig: {
     public: {
-      apiBase: 'http://localhost:5275/api'
+      apiBase: process.env.API_BASE_URL || 'http://localhost:5275/api'
     }
   },
   compatibilityDate: '2025-03-13',
@@ -29,23 +43,35 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: {
-        lang: 'fa'
-      }
-    }
+        lang: 'fa',
+        dir: 'rtl'
+      },
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' }
+      ]
+    },
+    baseURL: '/'
   },
   tailwindcss: {
     darkMode: 'class',
     config: {
       content: [
-        './components/**/*.{js,vue,ts}',
+        './components/**/*.{js,vue}',
         './layouts/**/*.vue',
         './pages/**/*.vue',
-        './plugins/**/*.{js,ts}',
-        './nuxt.config.{js,ts}',
+        './plugins/**/*.js',
+        './nuxt.config.js',
       ]
     }
   },
   build: {
     transpile: ['vuetify']
+  },
+  nitro: {
+    compressPublicAssets: true
+  },
+  experimental: {
+    payloadExtraction: false
   }
 }) 

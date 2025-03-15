@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useApi } from './useApi'
 
 export const useAuth = () => {
@@ -6,6 +6,19 @@ export const useAuth = () => {
   const loading = ref(false)
   const error = ref(null)
   const api = useApi()
+
+  const initAuth = () => {
+    const token = localStorage.getItem('token')
+    const storedUser = localStorage.getItem('user')
+    if (token && storedUser) {
+      user.value = JSON.parse(storedUser)
+    } else if (localStorage.getItem('isGuest')) {
+      user.value = {
+        username: 'مهمان',
+        role: 'guest'
+      }
+    }
+  }
 
   const checkAuth = () => {
     const token = localStorage.getItem('token')
@@ -19,10 +32,12 @@ export const useAuth = () => {
       const response = await api.auth.login(username, password)
       if (response.token) {
         localStorage.setItem('token', response.token)
-        user.value = {
+        const userData = {
           username: username,
           role: response.role
         }
+        user.value = userData
+        localStorage.setItem('user', JSON.stringify(userData))
         return true
       }
       return false
@@ -35,11 +50,13 @@ export const useAuth = () => {
   }
 
   const playAsGuest = () => {
-    user.value = {
+    const userData = {
       username: 'مهمان',
       role: 'guest'
     }
+    user.value = userData
     localStorage.setItem('isGuest', 'true')
+    localStorage.setItem('user', JSON.stringify(userData))
     return true
   }
 
@@ -47,6 +64,7 @@ export const useAuth = () => {
     user.value = null
     localStorage.removeItem('token')
     localStorage.removeItem('isGuest')
+    localStorage.removeItem('user')
   }
 
   const register = async (username, email, password) => {
@@ -55,7 +73,7 @@ export const useAuth = () => {
     try {
       const response = await api.auth.register(username, email, password)
       if (response.success) {
-        return await login(username, password)
+        return true
       }
       return false
     } catch (e) {
@@ -66,6 +84,11 @@ export const useAuth = () => {
     }
   }
 
+  // Initialize auth state
+  onMounted(() => {
+    initAuth()
+  })
+
   return {
     user,
     loading,
@@ -74,6 +97,7 @@ export const useAuth = () => {
     logout,
     register,
     checkAuth,
-    playAsGuest
+    playAsGuest,
+    initAuth
   }
 } 

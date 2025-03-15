@@ -1,20 +1,26 @@
 <template>
-  <NuxtPage />
+  <div>
+    <ColorScheme>
+      <ThemeToggle />
+      <Notifications />
+      <NuxtPage />
+    </ColorScheme>
+    <ClientOnly>
+      <LocalStorageDebug />
+    </ClientOnly>
+  </div>
 </template>
 
 <script setup>
 import { onMounted } from 'vue'
-import { useTranslations } from './composables/useTranslations'
+import { useAuthStore } from '~/stores/auth'
 
-const { locale } = useTranslations()
+const auth = useAuthStore()
 
 onMounted(() => {
-  // Set initial theme
-  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    document.documentElement.classList.add('dark')
-  }
   // Set RTL direction
   document.documentElement.dir = 'rtl'
+  auth.initializeAuth()
 })
 </script>
 
@@ -27,7 +33,7 @@ html {
 }
 
 body {
-  @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white;
+  @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200;
 }
 
 .dark {

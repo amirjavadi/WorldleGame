@@ -164,7 +164,11 @@ const handleSubmit = async () => {
 
   const success = await register(form.username, form.email, form.password)
   if (success) {
-    router.push('/')
+    // Show success message
+    const toast = useToast()
+    toast.success(t('registrationSuccess'))
+    // Redirect to login page
+    router.push('/login')
   }
 }
 </script>
