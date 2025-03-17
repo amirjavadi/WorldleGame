@@ -21,7 +21,7 @@ namespace WordleBackend.Controllers
         {
             try
             {
-                var word = await _wordService.AddWordAsync(request.Text);
+                var word = await _wordService.AddWordAsync(request.Text, request.CategoryId);
                 return Ok(word);
             }
             catch (Exception ex)
@@ -112,5 +112,8 @@ namespace WordleBackend.Controllers
     public class WordRequest
     {
         public string Text { get; set; } = string.Empty;
+        public int CategoryId { get; set; }
+        public string Language { get; set; } = "fa";
+        public string Difficulty { get; set; } = "medium";
     }
 } 

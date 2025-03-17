@@ -112,6 +112,16 @@ namespace WordleBackend.Data
                 {
                     new User
                     {
+                        Username = "admin",
+                        Email = "admin@example.com",
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow,
+                        IsActive = true,
+                        Role = "Admin"
+                    },
+                    new User
+                    {
                         Username = "testuser1",
                         Email = "test1@example.com",
                         PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),

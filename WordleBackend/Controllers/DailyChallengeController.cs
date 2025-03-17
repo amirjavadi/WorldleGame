@@ -6,7 +6,7 @@ using WordleBackend.Services.Interfaces;
 namespace WordleBackend.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/dailychallenge")]
 [Authorize]
 public class DailyChallengeController : ControllerBase
 {
@@ -25,7 +25,23 @@ public class DailyChallengeController : ControllerBase
         return Ok(challenge);
     }
 
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<DailyChallenge>> CreateChallenge([FromBody] CreateChallengeRequest request)
+    {
+        try
+        {
+            var challenge = await _dailyChallengeService.CreateChallengeAsync(request.Date);
+            return Ok(challenge);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     [HttpPost("participate")]
+    [Authorize]
     public async Task<ActionResult<DailyChallengeParticipation>> StartParticipation()
     {
         var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
@@ -37,22 +53,27 @@ public class DailyChallengeController : ControllerBase
     }
 
     [HttpPost("guess")]
+    [Authorize]
     public async Task<ActionResult<DailyChallengeParticipation>> MakeGuess(
         [FromQuery] int participationId,
         [FromBody] GuessRequest request)
     {
-        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
-        if (userId == 0)
-            return Unauthorized("Invalid or expired token");
-
         try
         {
+            var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+            if (userId == 0)
+                return Unauthorized("Invalid or expired token");
+
             var participation = await _dailyChallengeService.MakeGuessAsync(participationId, request.Guess);
             return Ok(participation);
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ex.Message);
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 
@@ -67,20 +88,28 @@ public class DailyChallengeController : ControllerBase
         return Ok(leaderboard);
     }
 
-    [HttpGet("my-participation")]
+    [HttpGet]
+    [Authorize]
     public async Task<ActionResult<DailyChallengeParticipation>> GetMyParticipation([FromQuery] DateTime? date)
     {
-        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
-        if (userId == 0)
-            return Unauthorized("Invalid or expired token");
+        try
+        {
+            var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+            if (userId == 0)
+                return Unauthorized("Invalid or expired token");
 
-        var targetDate = date ?? DateTime.UtcNow.Date;
-        var participation = await _dailyChallengeService.GetUserParticipationAsync(userId, targetDate);
-        
-        if (participation == null)
-            return NotFound();
+            var targetDate = date?.Date ?? DateTime.UtcNow.Date;
+            var participation = await _dailyChallengeService.GetUserParticipationAsync(userId, targetDate);
+            
+            if (participation == null)
+                return NotFound();
 
-        return Ok(participation);
+            return Ok(participation);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [AllowAnonymous]
@@ -95,4 +124,9 @@ public class DailyChallengeController : ControllerBase
 public class GuessRequest
 {
     public string Guess { get; set; } = string.Empty;
+}
+
+public class CreateChallengeRequest
+{
+    public DateTime Date { get; set; }
 } 

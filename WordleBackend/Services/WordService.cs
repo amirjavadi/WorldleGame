@@ -10,7 +10,7 @@ namespace WordleBackend.Services
 {
     public interface IWordService
     {
-        Task<Word> AddWordAsync(string text);
+        Task<Word> AddWordAsync(string text, int categoryId);
         Task<Word> SetTodaysWordAsync(string text);
         Task<bool> IsValidWordAsync(string text);
         Task<IEnumerable<Word>> GetWordsAsync(int page = 1, int pageSize = 10);
@@ -28,8 +28,16 @@ namespace WordleBackend.Services
             _context = context;
         }
 
-        public async Task<Word> AddWordAsync(string text)
+        public async Task<Word> AddWordAsync(string text, int categoryId)
         {
+            // بررسی وجود دسته‌بندی
+            var category = await _context.Categories.FindAsync(categoryId);
+            if (category == null)
+            {
+                throw new Exception($"دسته‌بندی با شناسه {categoryId} یافت نشد");
+            }
+
+            // بررسی تکراری نبودن کلمه
             if (await _context.Words.AnyAsync(w => w.Text == text))
             {
                 throw new Exception("این کلمه قبلاً در دیتابیس وجود دارد");
@@ -37,12 +45,14 @@ namespace WordleBackend.Services
 
             var word = new Word
             {
-                Text = text.ToUpper(),
+                Text = text,
+                CategoryId = categoryId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 IsActive = true,
-                Language = "en",
-                Difficulty = "medium"
+                Language = "fa",
+                Difficulty = "medium",
+                CreatedBy = "System"
             };
 
             _context.Words.Add(word);

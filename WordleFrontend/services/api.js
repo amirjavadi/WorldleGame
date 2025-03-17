@@ -107,59 +107,6 @@ class ApiService {
       })
   }
 
-  // Daily Challenge APIs
-  daily = {
-    getWord: async (token) => {
-      if (!await this.verifyTokenBeforeRequest()) {
-        throw new Error('لطفاً دوباره وارد شوید')
-      }
-      return axios.get('/api/DailyChallenge/today', {
-        headers: { Authorization: `Bearer ${token}` }
-      }).then(response => response.data)
-    },
-
-    getMyParticipation: async (date = null, token) => {
-      if (!await this.verifyTokenBeforeRequest()) {
-        throw new Error('لطفاً دوباره وارد شوید')
-      }
-      return axios.get('/api/DailyChallenge/my-participation', {
-        params: { date },
-        headers: { Authorization: `Bearer ${token}` }
-      }).then(response => response.data)
-    },
-
-    participate: async (token) => {
-      if (!await this.verifyTokenBeforeRequest()) {
-        throw new Error('لطفاً دوباره وارد شوید')
-      }
-      return axios.post('/api/DailyChallenge/participate', null, {
-        headers: { Authorization: `Bearer ${token}` }
-      }).then(response => response.data)
-    },
-
-    submitGuess: async (participationId, guess, token) => {
-      if (!await this.verifyTokenBeforeRequest()) {
-        throw new Error('لطفاً دوباره وارد شوید')
-      }
-      return axios.post(`/api/DailyChallenge/guess`, { 
-        participationId,
-        guess 
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      }).then(response => response.data)
-    },
-
-    getLeaderboard: async (challengeId = null, limit = 10, token) => {
-      if (!await this.verifyTokenBeforeRequest()) {
-        throw new Error('لطفاً دوباره وارد شوید')
-      }
-      return axios.get('/api/DailyChallenge/leaderboard', {
-        params: { challengeId, limit },
-        headers: { Authorization: `Bearer ${token}` }
-      }).then(response => response.data)
-    }
-  }
-
   // Leaderboard APIs
   leaderboard = {
     getDaily: (limit = 10, token) => 

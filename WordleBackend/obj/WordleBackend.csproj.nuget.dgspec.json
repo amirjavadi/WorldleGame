@@ -1,20 +1,22 @@
 {
   "format": 1,
   "restore": {
-    "/home/office/projects/WorldleGame/WordleBackend/WordleBackend.csproj": {}
+    "D:\\Projects\\WordleGame\\WordleBackend\\WordleBackend.csproj": {}
   },
   "projects": {
-    "/home/office/projects/WorldleGame/WordleBackend/WordleBackend.csproj": {
+    "D:\\Projects\\WordleGame\\WordleBackend\\WordleBackend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/office/projects/WorldleGame/WordleBackend/WordleBackend.csproj",
+        "projectUniqueName": "D:\\Projects\\WordleGame\\WordleBackend\\WordleBackend.csproj",
         "projectName": "WordleBackend",
-        "projectPath": "/home/office/projects/WorldleGame/WordleBackend/WordleBackend.csproj",
-        "packagesPath": "/home/office/.nuget/packages/",
-        "outputPath": "/home/office/projects/WorldleGame/WordleBackend/obj/",
+        "projectPath": "D:\\Projects\\WordleGame\\WordleBackend\\WordleBackend.csproj",
+        "packagesPath": "C:\\Users\\Amir-PC\\.nuget\\packages\\",
+        "outputPath": "D:\\Projects\\WordleGame\\WordleBackend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/office/.nuget/NuGet/NuGet.Config"
+          "D:\\Projects\\WordleGame\\WordleBackend\\NuGet.Config",
+          "C:\\Users\\Amir-PC\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -88,7 +90,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.114/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.100/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

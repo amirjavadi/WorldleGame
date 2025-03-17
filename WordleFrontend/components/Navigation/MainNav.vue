@@ -53,15 +53,6 @@
 
               <button
                 v-if="authStore.isLoggedIn && !authStore.isGuest"
-                @click="openDailyModal"
-                class="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-                :title="t('dailyChallenge')"
-              >
-                <i class="fas fa-calendar-day text-xl"></i>
-              </button>
-
-              <button
-                v-if="authStore.isLoggedIn && !authStore.isGuest"
                 @click="openLeaderboardModal"
                 class="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
                 :title="t('leaderboard')"
@@ -117,10 +108,6 @@
     :is-open="isProfileModalOpen"
     @close="isProfileModalOpen = false"
   />
-  <DailyModal
-    v-if="authStore.isLoggedIn && !authStore.isGuest"
-    v-model="isDailyModalOpen"
-  />
   <LeaderboardModal
     v-if="authStore.isLoggedIn && !authStore.isGuest"
     :is-open="isLeaderboardModalOpen"
@@ -134,22 +121,18 @@ import { useAuthStore } from '~/stores/auth'
 import { useThemeStore } from '~/stores/theme'
 import { useTranslations } from '~/composables/useTranslations'
 import { useGameStore } from '~/stores/game'
-import { useDailyStore } from '~/stores/daily'
 import ProfileModal from '~/components/Profile/ProfileModal.vue'
-import DailyModal from '~/components/Daily/DailyModal.vue'
 import LeaderboardModal from '~/components/Leaderboard/LeaderboardModal.vue'
 
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
 const gameStore = useGameStore()
-const dailyStore = useDailyStore()
 const { t, locale, setLocale } = useTranslations()
 
 const difficulty = ref('medium')
 const isSoundEnabled = ref(true)
 const score = ref(0)
 const isProfileModalOpen = ref(false)
-const isDailyModalOpen = ref(false)
 const isLeaderboardModalOpen = ref(false)
 
 const toggleLocale = () => {
@@ -171,14 +154,6 @@ const openProfileModal = () => {
   isProfileModalOpen.value = true;
 }
 
-const openDailyModal = () => {
-  if (!authStore.isLoggedIn || authStore.isGuest) {
-    return;
-  }
-  dailyStore.resetError();
-  isDailyModalOpen.value = true;
-}
-
 const openLeaderboardModal = () => {
   if (!authStore.isLoggedIn || authStore.isGuest) {
     return;
@@ -190,9 +165,7 @@ const openLeaderboardModal = () => {
 watch(() => authStore.isLoggedIn, (isLoggedIn) => {
   if (!isLoggedIn) {
     isProfileModalOpen.value = false
-    isDailyModalOpen.value = false
     isLeaderboardModalOpen.value = false
-    dailyStore.resetError()
   }
 })
 </script> 
