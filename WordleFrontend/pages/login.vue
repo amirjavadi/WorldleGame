@@ -119,36 +119,41 @@
 </template>
 
 <script setup>
+import { useAuthStore } from '~/stores/auth'
+
 definePageMeta({
   layout: 'auth'
 })
 
 const { t, locale, setLocale, dir } = useTranslations()
 const router = useRouter()
-const auth = useAuth()
-const { login, loading, error } = auth
+const auth = useAuthStore()
 
 const form = reactive({
   username: '',
   password: ''
 })
 
+const loading = computed(() => auth.loading)
+const error = computed(() => auth.error)
+
 const toggleLocale = () => {
   setLocale(locale.value === 'fa' ? 'en' : 'fa')
 }
 
 const handleSubmit = async () => {
-  const success = await login(form.username, form.password)
+  const success = await auth.login({
+    username: form.username,
+    password: form.password
+  })
   if (success) {
     router.push('/')
   }
 }
 
 const playAsGuest = () => {
-  const success = auth.playAsGuest()
-  if (success) {
-    router.push('/')
-  }
+  auth.loginAsGuest()
+  router.push('/')
 }
 </script>
 

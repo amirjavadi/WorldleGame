@@ -1,72 +1,65 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WordleBackend.Services;
+using WordleBackend.Models;
+using WordleBackend.Services.Interfaces;
 
-namespace WordleBackend.Controllers
+namespace WordleBackend.Controllers;
+
+[Authorize]
+[ApiController]
+[Route("api/[controller]")]
+public class LeaderboardController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class LeaderboardController : ControllerBase
+    private readonly ILeaderboardService _leaderboardService;
+
+    public LeaderboardController(ILeaderboardService leaderboardService)
     {
-        private readonly ILeaderboardService _leaderboardService;
+        _leaderboardService = leaderboardService;
+    }
 
-        public LeaderboardController(ILeaderboardService leaderboardService)
-        {
-            _leaderboardService = leaderboardService;
-        }
+    [HttpGet("daily")]
+    public async Task<ActionResult<IEnumerable<Leaderboard>>> GetDailyLeaderboard([FromQuery] int limit = 10)
+    {
+        var leaderboard = await _leaderboardService.GetDailyLeaderboardAsync(limit);
+        return Ok(leaderboard);
+    }
 
-        [HttpGet("global")]
-        public async Task<IActionResult> GetGlobalLeaderboard([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
-        {
-            try
-            {
-                var leaderboard = await _leaderboardService.GetGlobalLeaderboardAsync(page, pageSize);
-                return Ok(leaderboard);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
+    [HttpGet("weekly")]
+    public async Task<ActionResult<IEnumerable<Leaderboard>>> GetWeeklyLeaderboard([FromQuery] int limit = 10)
+    {
+        var leaderboard = await _leaderboardService.GetWeeklyLeaderboardAsync(limit);
+        return Ok(leaderboard);
+    }
 
-        [HttpGet("daily")]
-        public async Task<IActionResult> GetDailyLeaderboard([FromQuery] DateTime? date = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
-        {
-            try
-            {
-                var targetDate = date ?? DateTime.UtcNow.Date;
-                var leaderboard = await _leaderboardService.GetDailyLeaderboardAsync(targetDate, page, pageSize);
-                return Ok(leaderboard);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
+    [HttpGet("monthly")]
+    public async Task<ActionResult<IEnumerable<Leaderboard>>> GetMonthlyLeaderboard([FromQuery] int limit = 10)
+    {
+        var leaderboard = await _leaderboardService.GetMonthlyLeaderboardAsync(limit);
+        return Ok(leaderboard);
+    }
 
-        [Authorize]
-        [HttpGet("user-rank")]
-        public async Task<ActionResult<UserLeaderboardEntry>> GetUserRank()
-        {
-            var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
-            var rank = await _leaderboardService.GetUserRankAsync(userId);
-            if (rank == null)
-                return NotFound("کاربر یافت نشد");
-            return Ok(rank);
-        }
+    [HttpGet("all-time")]
+    public async Task<ActionResult<IEnumerable<Leaderboard>>> GetAllTimeLeaderboard([FromQuery] int limit = 10)
+    {
+        var leaderboard = await _leaderboardService.GetAllTimeLeaderboardAsync(limit);
+        return Ok(leaderboard);
+    }
 
-        [HttpGet("statistics")]
-        public async Task<IActionResult> GetGameStatistics()
-        {
-            try
-            {
-                var statistics = await _leaderboardService.GetGameStatisticsAsync();
-                return Ok(statistics);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
-        }
+    [HttpGet("user/{userId}")]
+    public async Task<ActionResult<Leaderboard>> GetUserStats(int userId, [FromQuery] string period = "all-time")
+    {
+        var stats = await _leaderboardService.GetUserStatsAsync(userId, period);
+        return Ok(stats);
+    }
+
+    [HttpGet("me")]
+    public async Task<ActionResult<Leaderboard>> GetMyStats([FromQuery] string period = "all-time")
+    {
+        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+        if (userId == 0)
+            return Unauthorized();
+
+        var stats = await _leaderboardService.GetUserStatsAsync(userId, period);
+        return Ok(stats);
     }
 } 

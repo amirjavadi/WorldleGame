@@ -1,39 +1,44 @@
 # راهنمای AI برای پروژه Wordle
 
 <template>
-  <div class="fixed inset-0 z-[70] flex items-center justify-center">
-    <div class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
     <div class="confetti-container">
-      <div v-for="i in 50" :key="i" 
-           class="confetti"
-           :style="{
-             '--delay': `${Math.random() * 3}s`,
-             '--rotation': `${Math.random() * 360}deg`,
-             '--rotation-end': `${Math.random() * 360 + 720}deg`,
-             '--position-x': `${Math.random() * 100}%`,
-             '--color': `hsl(${Math.random() * 360}, 70%, 50%)`
-           }">
-      </div>
+      <div
+        v-for="i in 50"
+        :key="i"
+        class="confetti"
+        :style="{
+          '--color': `hsl(${Math.random() * 360}deg, 100%, 50%)`,
+          '--position-x': `${Math.random() * 100}%`,
+          '--delay': `${Math.random() * 3}s`,
+          '--rotation': `${Math.random() * 360}deg`,
+          '--rotation-end': `${Math.random() * 360}deg`
+        }"
+      ></div>
     </div>
-    <div class="win-message relative z-10 text-center p-8 rounded-2xl shadow-2xl">
-      <div class="bg-gradient-to-br from-green-500/20 to-blue-500/20 backdrop-blur-md p-8 rounded-2xl border border-white/10">
-        <h2 class="text-4xl font-bold text-white mb-4">{{ t('congratulations') }} 🎉</h2>
-        <p class="text-xl text-white/90 mb-6">{{ t('youWon') }}</p>
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 win-message">
+      <div class="text-center">
+        <div class="mb-6">
+          <i class="fas fa-trophy text-6xl text-yellow-500 animate-bounce"></i>
+        </div>
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4 font-display">{{ t('congratulations') }}! 🎉</h2>
+        <p class="text-lg text-gray-600 dark:text-gray-300 mb-6">{{ t('youWon') }}</p>
         
-        <!-- آمار مختصر -->
-        <div class="grid grid-cols-2 gap-4 mb-6">
-          <div class="text-center p-3 bg-white/10 rounded-lg">
-            <p class="text-2xl font-bold text-white">{{ score }}</p>
-            <p class="text-sm text-white/80">{{ t('score') }}</p>
+        <div class="grid grid-cols-2 gap-4 mb-8">
+          <div class="bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900 dark:to-purple-900 p-4 rounded-lg">
+            <p class="text-2xl font-bold text-indigo-700 dark:text-indigo-300">{{ score }}</p>
+            <p class="text-sm text-indigo-600 dark:text-indigo-400">{{ t('score') }}</p>
           </div>
-          <div class="text-center p-3 bg-white/10 rounded-lg">
-            <p class="text-2xl font-bold text-white">{{ currentStreak }}</p>
-            <p class="text-sm text-white/80">{{ t('currentStreak') }}</p>
+          <div class="bg-gradient-to-br from-green-100 to-teal-100 dark:from-green-900 dark:to-teal-900 p-4 rounded-lg">
+            <p class="text-2xl font-bold text-green-700 dark:text-green-300">{{ currentStreak }}</p>
+            <p class="text-sm text-green-600 dark:text-green-400">{{ t('currentStreak') }}</p>
           </div>
         </div>
-        
-        <button @click="$emit('playAgain')" 
-                class="bg-gradient-to-r from-green-500/30 to-blue-500/30 hover:from-green-500/40 hover:to-blue-500/40 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-all duration-300 hover:scale-105 border border-white/20">
+
+        <button
+          @click="$emit('playAgain')"
+          class="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+        >
           {{ t('playAgain') }}
         </button>
       </div>
@@ -42,6 +47,10 @@
 </template>
 
 <script setup>
+import { useTranslations } from '~/composables/useTranslations'
+
+const { t } = useTranslations()
+
 defineProps({
   score: {
     type: Number,
@@ -53,16 +62,7 @@ defineProps({
   }
 })
 
-const t = (key) => {
-  const translations = {
-    congratulations: 'تبریک',
-    youWon: 'شما برنده شدید!',
-    playAgain: 'بازی مجدد',
-    score: 'امتیاز',
-    currentStreak: 'برد متوالی'
-  }
-  return translations[key]
-}
+defineEmits(['playAgain'])
 </script>
 
 <style scoped>

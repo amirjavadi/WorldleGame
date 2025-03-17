@@ -1,32 +1,55 @@
 import axios from 'axios'
+import { useAuthStore } from '~/stores/auth'
 
-export default defineNuxtPlugin(() => {
+export default defineNuxtPlugin(async () => {
   // تنظیم آدرس پایه API
   axios.defaults.baseURL = 'http://localhost:5275'
 
   // تنظیم headers پیش‌فرض
   axios.defaults.headers.common['Content-Type'] = 'application/json'
   
-  // فقط در محیط مرورگر به localStorage دسترسی داشته باشیم
-  if (process.client) {
-    // بازیابی توکن از localStorage در صورت وجود
-    const token = localStorage.getItem('token')
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+  // اضافه کردن interceptor برای تنظیم توکن
+  axios.interceptors.request.use(async config => {
+    if (process.client) {
+      const authStore = useAuthStore()
+      
+      // Skip token validation for auth-related endpoints
+      const isAuthEndpoint = config.url.includes('/auth/') || config.url.includes('/verify')
+      
+      if (!isAuthEndpoint && authStore.token) {
+        // Validate token before making request
+        const isValid = await authStore.checkAuth()
+        if (!isValid) {
+          authStore.resetState()
+          if (process.client) {
+            navigateTo('/login')
+          }
+          throw new Error('Invalid token')
+        }
+      }
+      
+      const token = authStore.getToken
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`
+      }
     }
+    return config
+  }, error => {
+    return Promise.reject(error)
+  })
 
-    // تنظیم interceptor برای مدیریت خطاها
-    axios.interceptors.response.use(
-      response => response,
-      error => {
-        if (error.response?.status === 401) {
-          // در صورت خطای 401، کاربر را به صفحه ورود هدایت می‌کنیم
-          localStorage.removeItem('token')
-          localStorage.removeItem('user')
+  // تنظیم interceptor برای مدیریت خطاها
+  axios.interceptors.response.use(
+    response => response,
+    async error => {
+      if (error.response?.status === 401 && process.client) {
+        const authStore = useAuthStore()
+        authStore.resetState()
+        if (process.client) {
           navigateTo('/login')
         }
-        return Promise.reject(error)
       }
-    )
-  }
+      return Promise.reject(error)
+    }
+  )
 }) 

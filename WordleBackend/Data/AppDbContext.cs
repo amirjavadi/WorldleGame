@@ -10,12 +10,15 @@ namespace WordleBackend.Data
         {
         }
 
-        public DbSet<User> Users { get; set; }
-        public DbSet<Word> Words { get; set; }
+        public DbSet<User> Users { get; set; } = null!;
+        public DbSet<Word> Words { get; set; } = null!;
         public DbSet<Score> Scores { get; set; }
-        public DbSet<GameHistory> GameHistories { get; set; }
+        public DbSet<GameHistory> GameHistories { get; set; } = null!;
         public DbSet<SystemSettings> SystemSettings { get; set; }
-        public DbSet<Category> Categories { get; set; }
+        public DbSet<Category> Categories { get; set; } = null!;
+        public DbSet<Leaderboard> Leaderboards { get; set; } = null!;
+        public DbSet<DailyChallenge> DailyChallenges { get; set; } = null!;
+        public DbSet<DailyChallengeParticipation> DailyChallengeParticipations { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -66,6 +69,45 @@ namespace WordleBackend.Data
                 .WithOne(w => w.Category)
                 .HasForeignKey(w => w.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Leaderboard relationships
+            modelBuilder.Entity<Leaderboard>()
+                .HasOne(l => l.User)
+                .WithMany()
+                .HasForeignKey(l => l.UserId);
+
+            // Leaderboard configurations
+            modelBuilder.Entity<Leaderboard>()
+                .HasIndex(l => new { l.Period, l.StartDate, l.EndDate });
+
+            // Daily Challenge configurations
+            modelBuilder.Entity<DailyChallenge>()
+                .HasIndex(dc => dc.Date)
+                .IsUnique();
+
+            modelBuilder.Entity<DailyChallenge>()
+                .HasOne(dc => dc.Word)
+                .WithMany()
+                .HasForeignKey(dc => dc.WordId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DailyChallenge>()
+                .HasMany(dc => dc.Participations)
+                .WithOne(p => p.Challenge)
+                .HasForeignKey(p => p.ChallengeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DailyChallengeParticipation>()
+                .HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DailyChallengeParticipation>()
+                .Property(p => p.Guesses)
+                .HasConversion(
+                    v => string.Join(',', v),
+                    v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
         }
     }
 } 

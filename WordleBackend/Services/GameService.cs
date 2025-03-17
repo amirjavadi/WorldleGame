@@ -6,51 +6,44 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using WordleBackend.Data;
 using WordleBackend.Models;
+using WordleBackend.Services.Interfaces;
 
 namespace WordleBackend.Services
 {
-    public interface IGameService
-    {
-        Task<GameHistory> StartNewGameAsync(int userId);
-        Task<GameHistory> MakeGuessAsync(int gameId, int userId, string guess);
-        Task<List<GameHistory>> GetUserGameHistoryAsync(int userId, int page = 1, int pageSize = 10);
-        Task<GameHistory> GetGameHistoryAsync(int userId, DateTime date);
-        Task<List<GameHistory>> GetActiveGamesAsync(int userId);
-        Task<List<GameHistory>> GetCompletedGamesAsync(int userId);
-    }
-
     public class GameService : IGameService
     {
         private readonly AppDbContext _context;
         private readonly IWordService _wordService;
+        private readonly ILeaderboardService _leaderboardService;
         private const int MaxAttempts = 6;
 
-        public GameService(AppDbContext context, IWordService wordService)
+        public GameService(AppDbContext context, IWordService wordService, ILeaderboardService leaderboardService)
         {
             _context = context;
             _wordService = wordService;
+            _leaderboardService = leaderboardService;
         }
 
         public async Task<GameHistory> StartNewGameAsync(int userId)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
-                throw new Exception("User not found");
+                throw new InvalidOperationException("کاربر یافت نشد");
 
             var word = await _wordService.GetRandomWordAsync();
             if (word == null)
-                throw new Exception("No words available");
+                throw new InvalidOperationException("کلمه‌ای برای بازی یافت نشد");
 
             var gameHistory = new GameHistory
             {
                 UserId = userId,
                 WordId = word.Id,
                 StartTime = DateTime.UtcNow,
-                Status = "InProgress",
+                Status = "in_progress",
                 Attempts = 0,
                 Score = 0,
-                Guesses = "",
-                LastGuess = ""
+                Difficulty = word.Difficulty,
+                Guesses = new List<string>()
             };
 
             _context.GameHistories.Add(gameHistory);
@@ -59,75 +52,91 @@ namespace WordleBackend.Services
             return gameHistory;
         }
 
-        public async Task<GameHistory> MakeGuessAsync(int gameId, int userId, string guess)
+        public async Task<GameHistory> MakeGuessAsync(int gameId, string guess)
         {
-            var gameHistory = await _context.GameHistories
-                .Include(gh => gh.Word)
-                .FirstOrDefaultAsync(gh => gh.Id == gameId && gh.UserId == userId);
+            var game = await _context.GameHistories
+                .Include(g => g.Word)
+                .FirstOrDefaultAsync(g => g.Id == gameId);
 
-            if (gameHistory == null)
-                throw new Exception("Game not found");
+            if (game == null)
+                throw new InvalidOperationException("بازی یافت نشد");
 
-            if (gameHistory.Status != "InProgress")
-                throw new Exception("Game is already completed");
+            if (game.Status != "in_progress")
+                throw new InvalidOperationException("بازی به پایان رسیده است");
 
-            if (gameHistory.Attempts >= MaxAttempts)
-                throw new Exception("Maximum attempts reached");
+            if (game.Attempts >= MaxAttempts)
+                throw new InvalidOperationException("تعداد تلاش‌های مجاز به پایان رسیده است");
 
-            if (guess.Length != gameHistory.Word.Text.Length)
-                throw new Exception($"Guess must be {gameHistory.Word.Text.Length} characters long");
+            if (guess.Length != game.Word.Text.Length)
+                throw new InvalidOperationException($"کلمه باید {game.Word.Text.Length} حرف باشد");
 
-            gameHistory.Attempts++;
-            gameHistory.LastGuess = guess;
-            gameHistory.Guesses = string.IsNullOrEmpty(gameHistory.Guesses)
-                ? guess
-                : $"{gameHistory.Guesses},{guess}";
+            game.Attempts++;
+            game.Guesses.Add(guess);
+            game.LastGuess = guess;
 
-            if (guess.Equals(gameHistory.Word.Text, StringComparison.OrdinalIgnoreCase))
+            if (guess.Equals(game.Word.Text, StringComparison.OrdinalIgnoreCase))
             {
-                gameHistory.Status = "Won";
-                gameHistory.EndTime = DateTime.UtcNow;
-                gameHistory.Score = CalculateScore(gameHistory.Attempts);
+                game.Status = "won";
+                game.EndTime = DateTime.UtcNow;
+                game.Score = CalculateScore(game.Attempts, game.Difficulty);
             }
-            else if (gameHistory.Attempts >= MaxAttempts)
+            else if (game.Attempts >= MaxAttempts)
             {
-                gameHistory.Status = "Lost";
-                gameHistory.EndTime = DateTime.UtcNow;
-                gameHistory.Score = 0;
+                game.Status = "lost";
+                game.EndTime = DateTime.UtcNow;
+                game.Score = 0;
             }
 
             await _context.SaveChangesAsync();
-            return gameHistory;
+
+            // Update leaderboard if game is finished
+            if (game.Status != "in_progress")
+            {
+                await _leaderboardService.UpdateLeaderboardAsync(game);
+            }
+
+            return game;
         }
 
-        public async Task<List<GameHistory>> GetUserGameHistoryAsync(int userId, int page = 1, int pageSize = 10)
+        private int CalculateScore(int attempts, string difficulty)
+        {
+            var baseScore = 1000;
+            var attemptPenalty = (attempts - 1) * 100;
+            var difficultyMultiplier = difficulty.ToLower() switch
+            {
+                "easy" => 1.0,
+                "medium" => 1.5,
+                "hard" => 2.0,
+                _ => 1.0
+            };
+
+            var finalScore = (int)((baseScore - attemptPenalty) * difficultyMultiplier);
+            return Math.Max(0, finalScore);
+        }
+
+        public async Task<IEnumerable<GameHistory>> GetUserGameHistoryAsync(int userId)
         {
             return await _context.GameHistories
-                .Include(gh => gh.Word)
-                .Where(gh => gh.UserId == userId)
-                .OrderByDescending(gh => gh.StartTime)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .Include(g => g.Word)
+                .Where(g => g.UserId == userId)
+                .OrderByDescending(g => g.StartTime)
                 .ToListAsync();
         }
 
-        public async Task<GameHistory> GetGameHistoryAsync(int userId, DateTime date)
+        public async Task<IEnumerable<GameHistory>> GetGameHistoryAsync()
         {
-            var startOfDay = date.Date;
-            var endOfDay = startOfDay.AddDays(1);
-
             return await _context.GameHistories
-                .Include(gh => gh.Word)
-                .Where(gh => gh.UserId == userId && gh.StartTime >= startOfDay && gh.StartTime < endOfDay)
-                .OrderByDescending(gh => gh.StartTime)
-                .FirstOrDefaultAsync();
+                .Include(g => g.Word)
+                .Include(g => g.User)
+                .OrderByDescending(g => g.StartTime)
+                .ToListAsync();
         }
 
         public async Task<List<GameHistory>> GetActiveGamesAsync(int userId)
         {
             return await _context.GameHistories
                 .Include(gh => gh.Word)
-                .Where(gh => gh.UserId == userId && gh.Status == "InProgress")
+                .Where(gh => gh.UserId == userId && gh.Status == "in_progress")
                 .OrderByDescending(gh => gh.StartTime)
                 .ToListAsync();
         }
@@ -136,21 +145,9 @@ namespace WordleBackend.Services
         {
             return await _context.GameHistories
                 .Include(gh => gh.Word)
-                .Where(gh => gh.UserId == userId && (gh.Status == "Won" || gh.Status == "Lost"))
+                .Where(gh => gh.UserId == userId && (gh.Status == "won" || gh.Status == "lost"))
                 .OrderByDescending(gh => gh.StartTime)
                 .ToListAsync();
-        }
-
-        private int CalculateScore(int attempts)
-        {
-            // Score calculation based on attempts:
-            // 1 attempt: 100 points
-            // 2 attempts: 80 points
-            // 3 attempts: 60 points
-            // 4 attempts: 40 points
-            // 5 attempts: 20 points
-            // 6 attempts: 10 points
-            return Math.Max(0, 120 - (attempts * 20));
         }
     }
 } 

@@ -4,23 +4,23 @@
       <ThemeToggle />
       <Notifications />
       <NuxtPage />
+      <GuestModal v-if="auth.shouldShowGuestModal" @close="auth.hideGuestModal" />
     </ColorScheme>
-    <ClientOnly>
-      <LocalStorageDebug />
-    </ClientOnly>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onBeforeMount } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
 const auth = useAuthStore()
 
-onMounted(() => {
-  // Set RTL direction
-  document.documentElement.dir = 'rtl'
-  auth.initializeAuth()
+onBeforeMount(() => {
+  if (process.client) {
+    const locale = localStorage.getItem('preferredLocale') || 'fa'
+    document.documentElement.dir = locale === 'fa' ? 'rtl' : 'ltr'
+    auth.checkAuth()
+  }
 })
 </script>
 
@@ -29,7 +29,6 @@ onMounted(() => {
 
 html {
   font-family: 'Vazirmatn', system-ui, sans-serif;
-  direction: rtl;
 }
 
 body {

@@ -1,67 +1,7 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-    <header class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg">
-      <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center">
-          <h1 class="text-3xl font-bold text-gray-900 dark:text-white font-display">
-            {{ t('gameTitle') }}
-          </h1>
-          <div class="flex items-center space-x-4 rtl:space-x-reverse">
-            <select
-              v-model="difficulty"
-              class="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
-              @change="resetGame"
-            >
-              <option value="easy">{{ t('easy') }}</option>
-              <option value="medium">{{ t('medium') }}</option>
-              <option value="hard">{{ t('hard') }}</option>
-            </select>
-            <button
-              @click="setLocale(locale === 'fa' ? 'en' : 'fa')"
-              class="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-            >
-              <i class="fas fa-language text-xl"></i>
-            </button>
-            <button
-              @click="toggleTheme"
-              class="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-            >
-              <i :class="['fas', theme === 'light' ? 'fa-moon' : 'fa-sun', 'text-xl']"></i>
-            </button>
-            <button
-              @click="toggleSound"
-              class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
-              :title="isSoundEnabled ? t('muteSound') : t('unmuteSound')"
-            >
-              <i :class="['fas', isSoundEnabled ? 'fa-volume-up' : 'fa-volume-mute', 'text-xl']"></i>
-            </button>
-            <button
-              @click="showStats = true"
-              class="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-            >
-              <i class="fas fa-chart-bar text-xl"></i>
-            </button>
-            <div class="flex items-center space-x-2 bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900 dark:to-purple-900 px-4 py-2 rounded-lg shadow-sm">
-              <i class="fas fa-trophy text-yellow-500 text-xl"></i>
-              <span class="text-lg font-bold text-indigo-700 dark:text-indigo-300">{{ score }}</span>
-              <span class="text-sm font-medium text-indigo-600 dark:text-indigo-400">{{ t('score') }}</span>
-            </div>
-            <div class="flex items-center space-x-2">
-              <i class="fas fa-user-circle text-xl text-gray-600 dark:text-gray-300"></i>
-              <span class="text-gray-900 dark:text-white font-medium">{{ username }}</span>
-            </div>
-            <button
-              @click="handleLogout"
-              class="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-            >
-              <i class="fas fa-sign-out-alt text-xl"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <MainNav />
+    <main class="flex-1 container mx-auto px-4 py-8">
       <div class="px-4 py-6 sm:px-0">
         <div class="flex flex-col items-center space-y-8">
           <div class="w-full max-w-md">
@@ -113,42 +53,15 @@
       <Transition>
         <div v-if="showStats" 
              class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-          <div class="bg-white dark:bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
-            <div class="flex justify-between items-center mb-6">
-              <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('statistics') }}</h3>
-              <button @click="closeStats" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                <i class="fas fa-times text-xl"></i>
-              </button>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-6">
-              <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ gamesPlayed }}</p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('gamesPlayed') }}</p>
-              </div>
-              <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ winRate }}%</p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('winRate') }}</p>
-              </div>
-              <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ currentStreak }}</p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('currentStreak') }}</p>
-              </div>
-              <div class="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ bestStreak }}</p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('bestStreak') }}</p>
-              </div>
-            </div>
-
-            <div v-if="gameOver" class="text-center">
-              <button
-                @click="resetGame(); closeStats();"
-                class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
-              >
-                {{ t('playAgain') }}
-              </button>
-            </div>
-          </div>
+          <StatsOverview
+            :games-played="gamesPlayed"
+            :win-rate="winRate"
+            :current-streak="currentStreak"
+            :best-streak="bestStreak"
+            :show-play-again="gameOver"
+            @close="closeStats"
+            @play-again="handlePlayAgain"
+          />
         </div>
       </Transition>
     </Teleport>
@@ -311,6 +224,16 @@
         </div>
       </div>
     </div>
+
+    <!-- مدال مهمان -->
+    <Teleport to="body">
+      <Transition>
+        <GuestModal
+          v-if="showGuestModal"
+          @close="showGuestModal = false"
+        />
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -322,6 +245,9 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useColorMode } from '#imports'
 import WinAnimation from '~/components/WinAnimation.vue'
 import LoseAnimation from '~/components/LoseAnimation.vue'
+import MainNav from '~/components/Navigation/MainNav.vue'
+import StatsOverview from '~/components/Stats/Overview.vue'
+import GuestModal from '~/components/GuestModal.vue'
 
 const { t, locale, setLocale } = useTranslations()
 const { playSound, isSoundEnabled, toggleSound } = useSounds()
@@ -351,6 +277,7 @@ const disabledLetters = ref(new Set())
 const helpLetters = ref(new Set()) // برای ذخیره موقعیت حروف کمکی
 const revealedHelpLetters = ref(new Set()) // برای ذخیره حروفی که قبلاً به عنوان کمکی نشان داده شده‌اند
 const showKeyboard = ref(true) // برای نمایش/مخفی کردن کیبورد
+const showGuestModal = ref(false)
 
 const maxGuesses = computed(() => {
   switch (difficulty.value) {
@@ -629,6 +556,12 @@ onMounted(() => {
     if (savedTheme) {
       colorMode.preference = savedTheme
     }
+    
+    // نمایش مدال مهمان اگر کاربر لاگین نکرده باشد
+    if (!localStorage.getItem('token') && !localStorage.getItem('guestModalShown')) {
+      showGuestModal.value = true
+      localStorage.setItem('guestModalShown', 'true')
+    }
   }
   
   window.addEventListener('keydown', handleKeyPress)
@@ -644,10 +577,9 @@ const getKeyboardLetterClass = (letter) => {
   
   if (isLetterDisabled(letter)) {
     classes = 'text-[#646971] dark:text-gray-400 bg-[#464b514d] dark:bg-gray-600'
-  } else if (theme.value === 'dark' && correctWord.value.includes(letter)) {
-    classes += ' bg-green-500 text-white'
-  } else if (theme.value === 'dark' && guesses.value[currentRow.value]?.includes(letter)) {
-    classes += ' bg-yellow-500 text-white'
+  } else if (guesses.value[currentRow.value]?.includes(letter)) {
+    // فقط حروفی که در حدس فعلی استفاده شده‌اند را هایلایت کن
+    classes += ' bg-gray-200 dark:bg-gray-500'
   }
   
   return classes

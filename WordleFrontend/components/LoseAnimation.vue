@@ -1,37 +1,43 @@
 <template>
-  <div class="fixed inset-0 z-[70] flex items-center justify-center">
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
     <div class="shatter-container">
-      <div v-for="i in 20" :key="i" 
-           class="shard"
-           :style="{
-             '--delay': `${Math.random() * 0.5}s`,
-             '--rotate': `${Math.random() * 360}deg`,
-             '--translate-x': `${(Math.random() - 0.5) * 100}vw`,
-             '--translate-y': `${(Math.random() - 0.5) * 100}vh`,
-           }">
-      </div>
+      <div
+        v-for="i in 20"
+        :key="i"
+        class="shard"
+        :style="{
+          '--translate-x': `${(Math.random() - 0.5) * 200}px`,
+          '--translate-y': `${(Math.random() - 0.5) * 200}px`,
+          '--delay': `${Math.random() * 0.5}s`,
+          '--rotate': `${Math.random() * 360}deg`
+        }"
+      ></div>
     </div>
-    <div class="game-over-message relative z-10 text-center p-8 rounded-2xl shadow-2xl">
-      <div class="bg-gradient-to-br from-red-500/20 to-purple-500/20 backdrop-blur-md p-8 rounded-2xl border border-white/10">
-        <h2 class="text-4xl font-bold text-white mb-4">{{ t('gameOver') }} 💔</h2>
-        <p class="text-xl text-white/90 mb-6">{{ t('correctWordWas') }}: <span class="font-bold text-2xl text-red-400">{{ correctWord }}</span></p>
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4 transform transition-all duration-300 game-over-message">
+      <div class="text-center">
+        <div class="mb-6">
+          <i class="fas fa-heart-crack text-6xl text-red-500 animate-pulse"></i>
+        </div>
+        <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-4 font-display">{{ t('gameOver') }}</h2>
+        <p class="text-lg text-gray-600 dark:text-gray-300 mb-2">{{ t('correctWordWas') }}:</p>
+        <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mb-6 font-display">{{ correctWord }}</p>
         
-        <!-- آمار مختصر -->
-        <div class="grid grid-cols-2 gap-4 mb-6">
-          <div class="text-center p-3 bg-white/10 rounded-lg">
-            <p class="text-2xl font-bold text-white">{{ gamesPlayed }}</p>
-            <p class="text-sm text-white/80">{{ t('gamesPlayed') }}</p>
+        <div class="grid grid-cols-2 gap-4 mb-8">
+          <div class="bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 p-4 rounded-lg">
+            <p class="text-2xl font-bold text-blue-700 dark:text-blue-300">{{ gamesPlayed }}</p>
+            <p class="text-sm text-blue-600 dark:text-blue-400">{{ t('gamesPlayed') }}</p>
           </div>
-          <div class="text-center p-3 bg-white/10 rounded-lg">
-            <p class="text-2xl font-bold text-white">{{ winRate }}%</p>
-            <p class="text-sm text-white/80">{{ t('winRate') }}</p>
+          <div class="bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900 dark:to-pink-900 p-4 rounded-lg">
+            <p class="text-2xl font-bold text-purple-700 dark:text-purple-300">{{ winRate }}%</p>
+            <p class="text-sm text-purple-600 dark:text-purple-400">{{ t('winRate') }}</p>
           </div>
         </div>
-        
-        <button @click="$emit('playAgain')" 
-                class="bg-gradient-to-r from-red-500/30 to-purple-500/30 hover:from-red-500/40 hover:to-purple-500/40 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-all duration-300 hover:scale-105 border border-white/20">
-          {{ t('playAgain') }}
+
+        <button
+          @click="$emit('playAgain')"
+          class="bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+        >
+          {{ t('tryAgain') }}
         </button>
       </div>
     </div>
@@ -39,6 +45,10 @@
 </template>
 
 <script setup>
+import { useTranslations } from '~/composables/useTranslations'
+
+const { t } = useTranslations()
+
 defineProps({
   correctWord: {
     type: String,
@@ -54,16 +64,7 @@ defineProps({
   }
 })
 
-const t = (key) => {
-  const translations = {
-    gameOver: 'بازی تمام شد',
-    correctWordWas: 'کلمه درست',
-    playAgain: 'بازی مجدد',
-    gamesPlayed: 'تعداد بازی',
-    winRate: 'درصد برد'
-  }
-  return translations[key]
-}
+defineEmits(['playAgain'])
 </script>
 
 <style scoped>

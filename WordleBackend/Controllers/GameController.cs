@@ -1,8 +1,11 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using WordleBackend.Services;
+using WordleBackend.Models;
+using WordleBackend.Services.Interfaces;
+using System.Collections.Generic;
 
 namespace WordleBackend.Controllers
 {
@@ -19,121 +22,105 @@ namespace WordleBackend.Controllers
         }
 
         [HttpPost("start")]
-        public async Task<IActionResult> StartGame()
+        public async Task<ActionResult<GameHistory>> StartGame()
         {
+            var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+            if (userId == 0)
+                return Unauthorized();
+
             try
             {
-                var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
                 var game = await _gameService.StartNewGameAsync(userId);
-                return Ok(new
-                {
-                    gameId = game.Id,
-                    wordLength = game.Word.Text.Length
-                });
+                return Ok(game);
             }
-            catch (Exception ex)
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
         }
 
-        [HttpPost("guess")]
-        public async Task<IActionResult> MakeGuess([FromBody] GuessRequest request)
+        [HttpPost("{gameId}/guess")]
+        public async Task<ActionResult<GameHistory>> MakeGuess(int gameId, [FromBody] GuessRequest request)
         {
+            var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+            if (userId == 0)
+                return Unauthorized();
+
             try
             {
-                var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
-                var game = await _gameService.MakeGuessAsync(request.GameId, userId, request.Guess);
-                return Ok(new
-                {
-                    isWon = game.Status == "Won",
-                    attempts = game.Attempts,
-                    score = game.Score,
-                    status = game.Status
-                });
+                var game = await _gameService.MakeGuessAsync(gameId, request.Guess);
+                return Ok(game);
             }
-            catch (Exception ex)
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
         }
 
         [HttpGet("history")]
-        public async Task<IActionResult> GetHistory([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<ActionResult<IEnumerable<GameHistory>>> GetUserHistory()
         {
-            try
-            {
-                var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
-                var history = await _gameService.GetUserGameHistoryAsync(userId, page, pageSize);
-                return Ok(history);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+            if (userId == 0)
+                return Unauthorized();
+
+            var history = await _gameService.GetUserGameHistoryAsync(userId);
+            return Ok(history);
         }
 
         [HttpGet("active")]
-        public async Task<IActionResult> GetActiveGames()
+        public async Task<ActionResult<List<GameHistory>>> GetActiveGames()
         {
-            try
-            {
-                var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
-                var games = await _gameService.GetActiveGamesAsync(userId);
-                return Ok(games);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+            if (userId == 0)
+                return Unauthorized();
+
+            var games = await _gameService.GetActiveGamesAsync(userId);
+            return Ok(games);
         }
 
         [HttpGet("completed")]
-        public async Task<IActionResult> GetCompletedGames()
+        public async Task<ActionResult<List<GameHistory>>> GetCompletedGames()
         {
-            try
-            {
-                var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
-                var games = await _gameService.GetCompletedGamesAsync(userId);
-                return Ok(games);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+            if (userId == 0)
+                return Unauthorized();
+
+            var games = await _gameService.GetCompletedGamesAsync(userId);
+            return Ok(games);
+        }
+
+        [HttpGet("all")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<IEnumerable<GameHistory>>> GetAllGames()
+        {
+            var games = await _gameService.GetGameHistoryAsync();
+            return Ok(games);
         }
 
         [HttpGet("today/status")]
         public async Task<IActionResult> GetTodayGameStatus()
         {
-            try
-            {
-                var userId = int.Parse(User.FindFirst("id")?.Value ?? "0");
-                var gameHistory = await _gameService.GetGameHistoryAsync(userId, DateTime.UtcNow);
-                if (gameHistory == null)
-                {
-                    return Ok(new { hasPlayed = false });
-                }
+            var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+            if (userId == 0)
+                return Unauthorized();
 
-                return Ok(new
-                {
-                    hasPlayed = true,
-                    isWon = gameHistory.Status == "Won",
-                    attempts = gameHistory.Attempts,
-                    score = gameHistory.Score,
-                    status = gameHistory.Status
-                });
-            }
-            catch (Exception ex)
+            var history = await _gameService.GetUserGameHistoryAsync(userId);
+            var todayGame = history.FirstOrDefault(g => g.StartTime.Date == DateTime.UtcNow.Date);
+
+            if (todayGame == null)
             {
-                return BadRequest(new { message = ex.Message });
+                return Ok(new { hasPlayed = false });
             }
+
+            return Ok(new
+            {
+                hasPlayed = true,
+                isWon = todayGame.Status == "won",
+                attempts = todayGame.Attempts,
+                score = todayGame.Score,
+                status = todayGame.Status
+            });
         }
     }
-
-    public class GuessRequest
-    {
-        public int GameId { get; set; }
-        public string Guess { get; set; }
-    }
-} 
+}

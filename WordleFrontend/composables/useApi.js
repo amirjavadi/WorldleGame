@@ -1,103 +1,68 @@
-import { useRuntimeConfig } from '#app'
+import { ref } from 'vue'
+
+const baseURL = 'http://localhost:3001/api'
 
 export const useApi = () => {
-  const config = useRuntimeConfig()
-  const baseURL = config.public.apiBase
+  const loading = ref(false)
+  const error = ref(null)
 
-  const handleResponse = async (response) => {
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'خطای سرور')
-    }
-    return response.json()
-  }
+  const request = async (endpoint, options = {}) => {
+    loading.value = true
+    error.value = null
 
-  const auth = {
-    login: async (username, password) => {
-      const response = await fetch(`${baseURL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      })
-      return handleResponse(response)
-    },
-
-    register: async (username, email, password) => {
-      const response = await fetch(`${baseURL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password })
-      })
-      return handleResponse(response)
-    }
-  }
-
-  const game = {
-    getWord: async () => {
-      const response = await fetch(`${baseURL}/game/word`)
-      return handleResponse(response)
-    },
-
-    submitGuess: async (guess) => {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${baseURL}/game/guess`, {
-        method: 'POST',
+    try {
+      const response = await fetch(`${baseURL}${endpoint}`, {
+        ...options,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          ...options.headers,
         },
-        body: JSON.stringify({ guess })
       })
-      return handleResponse(response)
-    },
 
-    getStats: async () => {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${baseURL}/game/stats`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      return handleResponse(response)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data
+    } catch (e) {
+      error.value = e.message
+      throw e
+    } finally {
+      loading.value = false
     }
   }
 
-  const leaderboard = {
-    getTop: async () => {
-      const response = await fetch(`${baseURL}/leaderboard`)
-      return handleResponse(response)
-    }
+  const get = (endpoint, options = {}) => {
+    return request(endpoint, { ...options, method: 'GET' })
   }
 
-  const admin = {
-    addWord: async (word) => {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${baseURL}/admin/words`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ word })
-      })
-      return handleResponse(response)
-    },
+  const post = (endpoint, body, options = {}) => {
+    return request(endpoint, {
+      ...options,
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
+  }
 
-    getWords: async () => {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${baseURL}/admin/words`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      return handleResponse(response)
-    }
+  const put = (endpoint, body, options = {}) => {
+    return request(endpoint, {
+      ...options,
+      method: 'PUT',
+      body: JSON.stringify(body),
+    })
+  }
+
+  const del = (endpoint, options = {}) => {
+    return request(endpoint, { ...options, method: 'DELETE' })
   }
 
   return {
-    auth,
-    game,
-    leaderboard,
-    admin
+    loading,
+    error,
+    get,
+    post,
+    put,
+    delete: del,
   }
 } 

@@ -5,8 +5,8 @@ export default defineNuxtConfig({
   modules: [
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
-    '@nuxtjs/color-mode',
-    'pinia-plugin-persistedstate/nuxt'
+    '@pinia-plugin-persistedstate/nuxt',
+    '@nuxtjs/color-mode'
   ],
   plugins: ['~/plugins/vuetify.js'],
   colorMode: {
@@ -24,13 +24,17 @@ export default defineNuxtConfig({
       dark: 'dark'
     }
   },
+  pinia: {
+    autoImports: ['defineStore', 'storeToRefs'],
+    storesDirs: ['./stores/**']
+  },
   piniaPluginPersistedstate: {
     storage: 'localStorage',
     debug: true
   },
   runtimeConfig: {
     public: {
-      apiBase: process.env.API_BASE_URL || 'http://localhost:5275/api'
+      apiBase: process.env.API_BASE_URL || 'http://localhost:5275'
     }
   },
   compatibilityDate: '2025-03-13',

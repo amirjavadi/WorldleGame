@@ -17,6 +17,126 @@ namespace WordleBackend.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.2");
 
+            modelBuilder.Entity("WordleBackend.Models.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DescriptionPersian")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("WordleBackend.Models.DailyChallenge", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("WordId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date")
+                        .IsUnique();
+
+                    b.HasIndex("WordId");
+
+                    b.ToTable("DailyChallenges");
+                });
+
+            modelBuilder.Entity("WordleBackend.Models.DailyChallengeParticipation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ChallengeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Guesses")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastGuess")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("TimeUntilNextChallenge")
+                        .HasColumnType("REAL");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChallengeId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("DailyChallengeParticipations");
+                });
+
             modelBuilder.Entity("WordleBackend.Models.GameHistory", b =>
                 {
                     b.Property<int>("Id")
@@ -26,18 +146,29 @@ namespace WordleBackend.Migrations
                     b.Property<int>("Attempts")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Difficulty")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EndTime")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Guesses")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsWon")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("PlayedAt")
+                    b.Property<string>("LastGuess")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Score")
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
@@ -52,6 +183,55 @@ namespace WordleBackend.Migrations
                     b.HasIndex("WordId");
 
                     b.ToTable("GameHistories");
+                });
+
+            modelBuilder.Entity("WordleBackend.Models.Leaderboard", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BestStreak")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CurrentStreak")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("GamesPlayed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("GamesWon")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Period")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TotalScore")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("WinRate")
+                        .HasColumnType("REAL");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Period", "StartDate", "EndDate");
+
+                    b.ToTable("Leaderboards");
                 });
 
             modelBuilder.Entity("WordleBackend.Models.Score", b =>
@@ -154,7 +334,11 @@ namespace WordleBackend.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsAdmin")
                         .HasColumnType("INTEGER");
@@ -221,6 +405,9 @@ namespace WordleBackend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -228,11 +415,9 @@ namespace WordleBackend.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Difficulty")
                         .IsRequired()
+                        .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")
@@ -240,22 +425,55 @@ namespace WordleBackend.Migrations
 
                     b.Property<string>("Language")
                         .IsRequired()
+                        .HasMaxLength(10)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Text")
                         .IsRequired()
-                        .HasMaxLength(5)
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
 
                     b.HasIndex("Text")
                         .IsUnique();
 
                     b.ToTable("Words");
+                });
+
+            modelBuilder.Entity("WordleBackend.Models.DailyChallenge", b =>
+                {
+                    b.HasOne("WordleBackend.Models.Word", "Word")
+                        .WithMany()
+                        .HasForeignKey("WordId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Word");
+                });
+
+            modelBuilder.Entity("WordleBackend.Models.DailyChallengeParticipation", b =>
+                {
+                    b.HasOne("WordleBackend.Models.DailyChallenge", "Challenge")
+                        .WithMany("Participations")
+                        .HasForeignKey("ChallengeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WordleBackend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Challenge");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("WordleBackend.Models.GameHistory", b =>
@@ -277,6 +495,17 @@ namespace WordleBackend.Migrations
                     b.Navigation("Word");
                 });
 
+            modelBuilder.Entity("WordleBackend.Models.Leaderboard", b =>
+                {
+                    b.HasOne("WordleBackend.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("WordleBackend.Models.Score", b =>
                 {
                     b.HasOne("WordleBackend.Models.User", "User")
@@ -286,6 +515,27 @@ namespace WordleBackend.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("WordleBackend.Models.Word", b =>
+                {
+                    b.HasOne("WordleBackend.Models.Category", "Category")
+                        .WithMany("Words")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("WordleBackend.Models.Category", b =>
+                {
+                    b.Navigation("Words");
+                });
+
+            modelBuilder.Entity("WordleBackend.Models.DailyChallenge", b =>
+                {
+                    b.Navigation("Participations");
                 });
 
             modelBuilder.Entity("WordleBackend.Models.User", b =>

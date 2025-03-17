@@ -30,23 +30,29 @@ namespace WordleBackend.Models
             LastLoginAt = DateTime.UtcNow;
             CreatedAt = DateTime.UtcNow;
             UpdatedAt = DateTime.UtcNow;
+            IsActive = true;
         }
 
+        [Key]
         public int Id { get; set; }
 
         [Required]
         [EmailAddress]
-        public string Email { get; set; }
+        [StringLength(100)]
+        public string Email { get; set; } = null!;
 
         [Required]
-        public string PasswordHash { get; set; }
+        public string PasswordHash { get; set; } = null!;
 
         [Required]
         [StringLength(50)]
-        public string Username { get; set; }
+        public string Username { get; set; } = null!;
 
-        public string Role { get; set; }
-        public bool IsAdmin { get; set; }
+        [Required]
+        public string Role { get; set; } = "User";
+
+        [Required]
+        public bool IsActive { get; set; } = true;
 
         // Profile Info
         public string DisplayName { get; set; }
@@ -74,5 +80,7 @@ namespace WordleBackend.Models
         // Navigation Properties
         public virtual ICollection<GameHistory> GameHistories { get; set; }
         public virtual ICollection<Score> Scores { get; set; }
+
+        public bool IsAdmin { get; set; }
     }
 } 

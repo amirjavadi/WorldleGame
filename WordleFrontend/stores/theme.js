@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
-import { useCookie } from 'vue-cookie'
+import { useCookie } from '#imports'
 
 export const useThemeStore = defineStore('theme', () => {
   const isDark = ref(false)

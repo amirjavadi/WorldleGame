@@ -15,6 +15,9 @@ namespace WordleBackend.Models
         [MaxLength(200)]
         public string Description { get; set; }
 
+        [MaxLength(200)]
+        public string DescriptionPersian { get; set; }
+
         public bool IsActive { get; set; }
 
         public DateTime CreatedAt { get; set; }
@@ -32,6 +35,10 @@ namespace WordleBackend.Models
             CreatedAt = DateTime.UtcNow;
             UpdatedAt = DateTime.UtcNow;
             IsActive = true;
+            Name = string.Empty;
+            Description = string.Empty;
+            DescriptionPersian = string.Empty;
+            CreatedBy = string.Empty;
         }
     }
 } 
