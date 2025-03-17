@@ -137,4 +137,89 @@
 - هر تغییر در فازها باید با هماهنگی کاربر انجام شود
 - وضعیت پیشرفت باید مرتباً به‌روز شود
 - مستندات باید با تغییرات همگام باشند
-- تست‌ها باید برای هر قابلیت جدید نوشته شوند 
+- تست‌ها باید برای هر قابلیت جدید نوشته شوند
+
+## Daily Challenge Feature Phases
+
+### Phase 1: Complete Daily Challenge APIs
+1. Complete `getTodaysChallenge` in `api.js`:
+   - Get daily word
+   - Get user participation status
+   - Get statistics and scores
+
+2. Complete `startParticipation` in `api.js`:
+   - Start challenge participation
+   - Get initial challenge information
+
+3. Complete `submitGuess` in `api.js`:
+   - Submit user guess
+   - Get guess result
+   - Get updated statistics
+
+### Phase 2: Complete Daily Challenge Store
+1. Complete `dailyChallengeStore.js`:
+   - Add required states
+   - Implement actions for challenge management
+   - Add mutations for state updates
+
+2. Add computed properties:
+   - Calculate remaining time
+   - Calculate current score
+   - Calculate user rank
+
+### Phase 3: Complete UI Components
+1. Complete `Challenge.vue`:
+   - Add score display
+   - Add rank display
+   - Add statistics display
+
+2. Complete `DailyModal.vue`:
+   - Add leaderboard display
+   - Add overall statistics display
+   - Add challenge history display
+
+3. Complete `CountdownTimer.vue`:
+   - Add better animations
+   - Add next challenge date display
+
+### Phase 4: Add Additional Features
+1. Add sharing system:
+   - Share results on social networks
+   - Copy results to clipboard
+
+2. Add rewards system:
+   - Daily rewards
+   - Weekly rewards
+   - Monthly rewards
+
+3. Add ranking system:
+   - Daily leaderboard
+   - Weekly leaderboard
+   - Monthly leaderboard
+
+### Phase 5: Testing and Optimization
+1. Performance testing:
+   - Test APIs
+   - Test UI
+   - Test functionality in different states
+
+2. Optimization:
+   - Code optimization
+   - Performance optimization
+   - UI/UX optimization
+
+3. Bug fixing:
+   - Fix potential bugs
+   - Improve user experience
+   - Add error messages
+
+### Phase 6: Documentation
+1. Code documentation:
+   - Component descriptions
+   - API descriptions
+   - Store descriptions
+
+2. User documentation:
+   - Usage guide
+   - Challenge rules
+   - FAQ 
