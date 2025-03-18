@@ -113,6 +113,10 @@
     :is-open="isLeaderboardModalOpen"
     @close="isLeaderboardModalOpen = false"
   />
+  <DailyModal
+    v-if="showDailyModal"
+    @close="showDailyModal = false"
+  />
 </template>
 
 <script setup>
@@ -123,6 +127,7 @@ import { useTranslations } from '~/composables/useTranslations'
 import { useGameStore } from '~/stores/game'
 import ProfileModal from '~/components/Profile/ProfileModal.vue'
 import LeaderboardModal from '~/components/Leaderboard/LeaderboardModal.vue'
+import DailyModal from '~/components/Daily/DailyModal.vue'
 
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
@@ -134,6 +139,7 @@ const isSoundEnabled = ref(true)
 const score = ref(0)
 const isProfileModalOpen = ref(false)
 const isLeaderboardModalOpen = ref(false)
+const showDailyModal = ref(false)
 
 const toggleLocale = () => {
   setLocale(locale.value === 'fa' ? 'en' : 'fa')

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useAuthStore } from './auth'
-import api from '~/services/api'
+import { api } from '~/services/api'
 
 export const useDailyStore = defineStore('daily', () => {
   const authStore = useAuthStore()

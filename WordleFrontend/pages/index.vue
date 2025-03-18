@@ -1,43 +1,101 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-    <MainNav />
-    <main class="flex-1 container mx-auto px-4 py-8">
-      <div class="px-4 py-6 sm:px-0">
-        <div class="flex flex-col items-center space-y-8">
-          <div class="w-full max-w-md">
-            <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl rounded-xl p-6 transform hover:scale-[1.02] transition-all duration-300">
-              <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold text-gray-900 dark:text-white font-display">
-                  {{ t('guessWord') }}
-                </h2>
-                <!-- دکمه کمک -->
-                <button
-                  @click="useHelp"
-                  class="relative group"
-                >
-                  <i class="fas fa-lightbulb text-2xl text-yellow-500 hover:text-yellow-600 transition-colors duration-200 animate-pulse"></i>
-                  <span class="absolute -top-2 -right-2 bg-purple-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {{ helpCount }}
-                  </span>
-                </button>
+  <div class="min-h-screen relative overflow-hidden">
+    <!-- Animated background -->
+    <div class="fixed inset-0 bg-gradient-to-br from-blue-50/60 via-indigo-50/60 to-purple-50/60 dark:from-slate-900/90 dark:via-slate-900/90 dark:to-slate-900/90">
+      <!-- Animated circles -->
+      <div class="absolute top-0 left-0 w-full h-full">
+        <div class="absolute w-[500px] h-[500px] bg-gradient-to-r from-rose-100/10 to-indigo-100/10 dark:from-rose-900/5 dark:to-indigo-900/5 rounded-full blur-3xl animate-float-slow top-[-200px] left-[-200px]"></div>
+        <div class="absolute w-[400px] h-[400px] bg-gradient-to-r from-blue-100/10 to-violet-100/10 dark:from-blue-900/5 dark:to-violet-900/5 rounded-full blur-3xl animate-float-medium top-[40%] right-[-100px]"></div>
+        <div class="absolute w-[600px] h-[600px] bg-gradient-to-r from-indigo-100/10 to-purple-100/10 dark:from-indigo-900/5 dark:to-purple-900/5 rounded-full blur-3xl animate-float-fast bottom-[-200px] left-[30%]"></div>
+      </div>
+      <!-- Subtle grid pattern -->
+      <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDBNIDAgMjAgTCA0MCAyMCBNIDIwIDAgTCAyMCA0MCBNIDAgMzAgTCA0MCAzMCBNIDMwIDAgTCAzMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLW9wYWNpdHk9IjAuMDIiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-30"></div>
+    </div>
+
+    <!-- Main content -->
+    <div class="relative z-10">
+      <MainNav />
+      <main class="flex-1 container mx-auto px-4 py-4">
+        <div class="px-4 py-2 sm:px-0">
+          <div class="flex flex-col items-center space-y-6">
+            <div class="w-full max-w-md">
+              <!-- Daily Challenge Section -->
+              <div v-if="isAuthenticated" 
+                   class="flex items-center justify-between mb-4 bg-gradient-to-r from-indigo-50/80 via-purple-50/80 to-pink-50/80 dark:from-indigo-900/20 dark:via-purple-900/20 dark:to-pink-900/20 py-2 px-4 rounded-xl shadow-md transform hover:scale-[1.01] transition-all duration-300 hover:shadow-lg border border-indigo-100/50 dark:border-indigo-800/20 backdrop-blur-sm">
+                <div class="flex items-center space-x-3 rtl:space-x-reverse">
+                  <div class="relative">
+                    <button
+                      @click="showDailyModal = true"
+                      class="group relative flex items-center space-x-2 rtl:space-x-reverse px-4 py-1.5 bg-gradient-to-r from-indigo-200/90 via-purple-200/90 to-pink-200/90 dark:from-indigo-800/40 dark:via-purple-800/40 dark:to-pink-800/40 text-indigo-700 dark:text-indigo-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-500 transform hover:scale-[1.02] backdrop-blur-sm overflow-hidden"
+                    >
+                      <i class="fas fa-calendar-day text-lg relative z-10 group-hover:rotate-12 transition-transform duration-300"></i>
+                      <span class="font-bold relative z-10 group-hover:tracking-wider transition-all duration-300">{{ t('dailyChallenge') }}</span>
+                      <!-- Animated background gradient -->
+                      <div class="absolute inset-0 bg-gradient-to-r from-indigo-200/50 via-purple-200/50 to-pink-200/50 dark:from-indigo-700/30 dark:via-purple-700/30 dark:to-pink-700/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                      <!-- Shine effect -->
+                      <div class="absolute inset-0 transform translate-x-full group-hover:translate-x-[-100%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                    </button>
+                    <div class="absolute -top-1 -right-1 w-1.5 h-1.5 bg-yellow-300/80 rounded-full animate-ping"></div>
+                    <div class="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-purple-300/80 rounded-full animate-ping delay-150"></div>
+                  </div>
+                  <div class="relative">
+                    <i class="fas fa-trophy text-xl text-yellow-400/90 transform transition-transform duration-200 hover:scale-110 hover:text-yellow-500/90"></i>
+                    <div class="absolute -top-1 -right-1 w-1.5 h-1.5 bg-yellow-300/80 rounded-full animate-ping"></div>
+                  </div>
+                </div>
+                
+                <div class="flex items-center space-x-2 rtl:space-x-reverse bg-white/30 dark:bg-gray-800/30 rounded-lg px-3 py-1 shadow-inner">
+                  <div class="text-center">
+                    <div class="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500/90 to-purple-500/90 dark:from-indigo-400/90 dark:to-purple-400/90">{{ hours }}</div>
+                    <div class="text-xs text-indigo-400/70 dark:text-indigo-400/70">{{ t('hours') }}</div>
+                  </div>
+                  <div class="text-sm font-bold text-indigo-400/70 dark:text-indigo-400/70 animate-pulse">:</div>
+                  <div class="text-center">
+                    <div class="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500/90 to-purple-500/90 dark:from-indigo-400/90 dark:to-purple-400/90">{{ minutes }}</div>
+                    <div class="text-xs text-indigo-400/70 dark:text-indigo-400/70">{{ t('minutes') }}</div>
+                  </div>
+                  <div class="text-sm font-bold text-indigo-400/70 dark:text-indigo-400/70 animate-pulse">:</div>
+                  <div class="text-center">
+                    <div class="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-500/90 to-purple-500/90 dark:from-indigo-400/90 dark:to-purple-400/90">{{ seconds }}</div>
+                    <div class="text-xs text-indigo-400/70 dark:text-indigo-400/70">{{ t('seconds') }}</div>
+                  </div>
+                </div>
               </div>
-              <div class="space-y-4">
-                <div v-for="row in maxGuesses" :key="row" class="flex space-x-2">
-                  <div
-                    v-for="col in wordLength"
-                    :key="col"
-                    class="w-12 h-12 flex items-center justify-center text-2xl font-bold rounded-lg border-2 cursor-pointer transition-all duration-200 hover:border-indigo-500 relative"
-                    :class="[
-                      getLetterClass(guesses[row - 1]?.[col - 1], col - 1, row),
-                      currentRow === row - 1 && currentCol === col - 1 ? 'active-square' : '',
-                      currentRow === row - 1 && col - 1 === currentCol ? 'waiting-input' : '',
-                      completedRows.value && completedRows.value.has(row - 1) ? 'flip-animation' : '',
-                      currentRow === row - 1 ? 'active-row' : 'inactive-row'
-                    ]"
+
+              <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl rounded-xl p-6 transform hover:scale-[1.02] transition-all duration-300">
+                <div class="flex justify-between items-center mb-4">
+                  <h2 class="text-xl font-semibold text-gray-900 dark:text-white font-display">
+                    {{ t('guessWord') }}
+                  </h2>
+                  <!-- دکمه کمک -->
+                  <button
+                    @click="useHelp"
+                    class="relative group"
                   >
-                    {{ guesses[row - 1]?.[col - 1] || '' }}
-                    <div v-if="currentRow === row - 1 && currentCol === col - 1" 
-                         class="absolute bottom-2 left-1/2 transform -translate-x-1/2 cursor-blink">
+                    <i class="fas fa-lightbulb text-2xl text-yellow-500 hover:text-yellow-600 transition-colors duration-200 animate-pulse"></i>
+                    <span class="absolute -top-2 -right-2 bg-purple-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {{ helpCount }}
+                    </span>
+                  </button>
+                </div>
+                <div class="space-y-4">
+                  <div v-for="row in maxGuesses" :key="row" class="flex space-x-2">
+                    <div
+                      v-for="col in wordLength"
+                      :key="col"
+                      class="w-12 h-12 flex items-center justify-center text-2xl font-bold rounded-lg border-2 cursor-pointer transition-all duration-200 hover:border-indigo-500 relative"
+                      :class="[
+                        getLetterClass(guesses[row - 1]?.[col - 1], col - 1, row),
+                        currentRow === row - 1 && currentCol === col - 1 ? 'active-square' : '',
+                        currentRow === row - 1 && col - 1 === currentCol ? 'waiting-input' : '',
+                        completedRows.value && completedRows.value.has(row - 1) ? 'flip-animation' : '',
+                        currentRow === row - 1 ? 'active-row' : 'inactive-row'
+                      ]"
+                    >
+                      {{ guesses[row - 1]?.[col - 1] || '' }}
+                      <div v-if="currentRow === row - 1 && currentCol === col - 1" 
+                           class="absolute bottom-2 left-1/2 transform -translate-x-1/2 cursor-blink">
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -45,195 +103,207 @@
             </div>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
 
-    <!-- مدال آمار -->
-    <Teleport to="body">
-      <Transition>
-        <div v-if="showStats" 
-             class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-          <StatsOverview
-            :games-played="gamesPlayed"
-            :win-rate="winRate"
-            :current-streak="currentStreak"
-            :best-streak="bestStreak"
-            :show-play-again="gameOver"
-            @close="closeStats"
-            @play-again="handlePlayAgain"
-          />
-        </div>
-      </Transition>
-    </Teleport>
+      <!-- مدال آمار -->
+      <Teleport to="body">
+        <Transition>
+          <div v-if="showStats" 
+               class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+            <StatsOverview
+              :games-played="gamesPlayed"
+              :win-rate="winRate"
+              :current-streak="currentStreak"
+              :best-streak="bestStreak"
+              :show-play-again="gameOver"
+              @close="closeStats"
+              @play-again="handlePlayAgain"
+            />
+          </div>
+        </Transition>
+      </Teleport>
 
-    <!-- انیمیشن‌های برد و باخت -->
-    <Teleport to="body">
-      <Transition>
-        <WinAnimation v-if="gameOver && gameWon" 
-                     :score="score"
-                     :current-streak="currentStreak"
-                     @playAgain="handlePlayAgain" />
-      </Transition>
-      <Transition>
-        <LoseAnimation v-if="gameOver && !gameWon" 
-                      :correct-word="correctWord"
-                      :games-played="gamesPlayed"
-                      :win-rate="winRate"
-                      @playAgain="handlePlayAgain" />
-      </Transition>
-    </Teleport>
+      <!-- انیمیشن‌های برد و باخت -->
+      <Teleport to="body">
+        <Transition>
+          <WinAnimation v-if="gameOver && gameWon" 
+                       :score="score"
+                       :current-streak="currentStreak"
+                       @playAgain="handlePlayAgain" />
+        </Transition>
+        <Transition>
+          <LoseAnimation v-if="gameOver && !gameWon" 
+                        :correct-word="correctWord"
+                        :games-played="gamesPlayed"
+                        :win-rate="winRate"
+                        @playAgain="handlePlayAgain" />
+        </Transition>
+      </Teleport>
 
-    <!-- کیبورد -->
-    <div class="fixed bottom-0 left-0 right-0">
-      <!-- نوار بالای کیبورد -->
-      <div 
-        @click="showKeyboard = !showKeyboard"
-        class="w-full bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm cursor-pointer flex justify-center items-center py-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 border-t border-gray-200 dark:border-gray-700"
-      >
-        <div class="w-16 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
-      </div>
       <!-- کیبورد -->
-      <div 
-        v-show="showKeyboard"
-        class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-lg p-4 transition-all duration-300 transform"
-        :class="showKeyboard ? 'translate-y-0' : 'translate-y-full'"
-      >
-        <div class="max-w-2xl mx-auto">
-          <template v-if="locale === 'fa'">
-            <div class="grid grid-cols-11 gap-1 mb-2">
-              <button
-                v-for="letter in 'ضصثقفغعهخحج'"
-                :key="letter"
-                @click="handleKeyPress({ key: letter })"
-                class="p-2 text-center rounded-lg transition-all duration-200"
-                :class="[
-                  getKeyboardLetterClass(letter),
-                  isLetterDisabled(letter) ? 'opacity-90 cursor-not-allowed bg-[#464b514d] text-[#646971] dark:bg-gray-600 dark:text-gray-400' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-                ]"
-                :disabled="isLetterDisabled(letter) || gameOver"
-              >
-                {{ letter }}
-              </button>
-            </div>
-            <div class="grid grid-cols-10 gap-1 mb-2">
-              <button
-                v-for="letter in 'شسیبلاتنمک'"
-                :key="letter"
-                @click="handleKeyPress({ key: letter })"
-                class="p-2 text-center rounded-lg transition-all duration-200"
-                :class="[
-                  getKeyboardLetterClass(letter),
-                  isLetterDisabled(letter) ? 'opacity-90 cursor-not-allowed bg-[#464b514d] text-[#646971] dark:bg-gray-600 dark:text-gray-400' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-                ]"
-                :disabled="isLetterDisabled(letter) || gameOver"
-              >
-                {{ letter }}
-              </button>
-            </div>
-            <div class="grid grid-cols-11 gap-1">
-              <button
-                v-for="letter in 'ظطزرذدپو'"
-                :key="letter"
-                @click="handleKeyPress({ key: letter })"
-                class="p-2 text-center rounded-lg transition-all duration-200"
-                :class="[
-                  getKeyboardLetterClass(letter),
-                  isLetterDisabled(letter) ? 'opacity-90 cursor-not-allowed bg-[#464b514d] text-[#646971] dark:bg-gray-600 dark:text-gray-400' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-                ]"
-                :disabled="isLetterDisabled(letter) || gameOver"
-              >
-                {{ letter }}
-              </button>
-              <button
-                @click="handleKeyPress({ key: 'Enter' })"
-                class="col-span-2 p-2 text-center rounded-lg bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 transition-all duration-200"
-                :disabled="gameOver"
-              >
-                {{ t('enter') }}
-              </button>
-              <button
-                @click="handleKeyPress({ key: 'Backspace' })"
-                class="p-2 text-center rounded-lg bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 transition-all duration-200"
-                :disabled="gameOver"
-              >
-                <i class="fas fa-backspace"></i>
-              </button>
-            </div>
-          </template>
-          <template v-else>
-            <div class="grid grid-cols-10 gap-1 mb-2">
-              <button
-                v-for="letter in 'QWERTYUIOP'"
-                :key="letter"
-                @click="handleKeyPress({ key: letter.toLowerCase() })"
-                class="p-2 text-center rounded-lg transition-colors duration-200"
-                :class="[
-                  getKeyboardLetterClass(letter.toLowerCase()),
-                  isLetterDisabled(letter.toLowerCase()) ? 'opacity-50 cursor-not-allowed' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-                ]"
-                :disabled="isLetterDisabled(letter.toLowerCase()) || gameOver"
-              >
-                {{ letter }}
-              </button>
-            </div>
-            <div class="grid grid-cols-9 gap-1 mb-2">
-              <button
-                v-for="letter in 'ASDFGHJKL'"
-                :key="letter"
-                @click="handleKeyPress({ key: letter.toLowerCase() })"
-                class="p-2 text-center rounded-lg transition-colors duration-200"
-                :class="[
-                  getKeyboardLetterClass(letter.toLowerCase()),
-                  isLetterDisabled(letter.toLowerCase()) ? 'opacity-50 cursor-not-allowed' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-                ]"
-                :disabled="isLetterDisabled(letter.toLowerCase()) || gameOver"
-              >
-                {{ letter }}
-              </button>
-            </div>
-            <div class="grid grid-cols-11 gap-1">
-              <button
-                v-for="letter in 'ZXCVBNM'"
-                :key="letter"
-                @click="handleKeyPress({ key: letter.toLowerCase() })"
-                class="p-2 text-center rounded-lg transition-colors duration-200"
-                :class="[
-                  getKeyboardLetterClass(letter.toLowerCase()),
-                  isLetterDisabled(letter.toLowerCase()) ? 'opacity-50 cursor-not-allowed' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-                ]"
-                :disabled="isLetterDisabled(letter.toLowerCase()) || gameOver"
-              >
-                {{ letter }}
-              </button>
-              <button
-                @click="handleKeyPress({ key: 'Enter' })"
-                class="col-span-2 p-2 text-center rounded-lg bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 transition-all duration-200"
-                :disabled="gameOver"
-              >
-                {{ t('enter') }}
-              </button>
-              <button
-                @click="handleKeyPress({ key: 'Backspace' })"
-                class="col-span-2 p-2 text-center rounded-lg bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 transition-all duration-200"
-                :disabled="gameOver"
-              >
-                <i class="fas fa-backspace"></i>
-              </button>
-            </div>
-          </template>
+      <div class="fixed bottom-0 left-0 right-0">
+        <!-- نوار بالای کیبورد -->
+        <div 
+          @click="showKeyboard = !showKeyboard"
+          class="w-full bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm cursor-pointer flex justify-center items-center py-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 border-t border-gray-200 dark:border-gray-700"
+        >
+          <div class="w-16 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+        </div>
+        <!-- کیبورد -->
+        <div 
+          v-show="showKeyboard"
+          class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm shadow-lg p-4 transition-all duration-300 transform"
+          :class="showKeyboard ? 'translate-y-0' : 'translate-y-full'"
+        >
+          <div class="max-w-2xl mx-auto">
+            <template v-if="locale === 'fa'">
+              <div class="grid grid-cols-11 gap-1 mb-2">
+                <button
+                  v-for="letter in 'ضصثقفغعهخحج'"
+                  :key="letter"
+                  @click="handleKeyPress({ key: letter })"
+                  class="p-2 text-center rounded-lg transition-all duration-200"
+                  :class="[
+                    getKeyboardLetterClass(letter),
+                    isLetterDisabled(letter) ? 'opacity-90 cursor-not-allowed bg-[#464b514d] text-[#646971] dark:bg-gray-600 dark:text-gray-400' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ]"
+                  :disabled="isLetterDisabled(letter) || gameOver"
+                >
+                  {{ letter }}
+                </button>
+              </div>
+              <div class="grid grid-cols-10 gap-1 mb-2">
+                <button
+                  v-for="letter in 'شسیبلاتنمک'"
+                  :key="letter"
+                  @click="handleKeyPress({ key: letter })"
+                  class="p-2 text-center rounded-lg transition-all duration-200"
+                  :class="[
+                    getKeyboardLetterClass(letter),
+                    isLetterDisabled(letter) ? 'opacity-90 cursor-not-allowed bg-[#464b514d] text-[#646971] dark:bg-gray-600 dark:text-gray-400' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ]"
+                  :disabled="isLetterDisabled(letter) || gameOver"
+                >
+                  {{ letter }}
+                </button>
+              </div>
+              <div class="grid grid-cols-11 gap-1">
+                <button
+                  v-for="letter in 'ظطزرذدپو'"
+                  :key="letter"
+                  @click="handleKeyPress({ key: letter })"
+                  class="p-2 text-center rounded-lg transition-all duration-200"
+                  :class="[
+                    getKeyboardLetterClass(letter),
+                    isLetterDisabled(letter) ? 'opacity-90 cursor-not-allowed bg-[#464b514d] text-[#646971] dark:bg-gray-600 dark:text-gray-400' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ]"
+                  :disabled="isLetterDisabled(letter) || gameOver"
+                >
+                  {{ letter }}
+                </button>
+                <button
+                  @click="handleKeyPress({ key: 'Enter' })"
+                  class="col-span-2 p-2 text-center rounded-lg bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 transition-all duration-200"
+                  :disabled="gameOver"
+                >
+                  {{ t('enter') }}
+                </button>
+                <button
+                  @click="handleKeyPress({ key: 'Backspace' })"
+                  class="p-2 text-center rounded-lg bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 transition-all duration-200"
+                  :disabled="gameOver"
+                >
+                  <i class="fas fa-backspace"></i>
+                </button>
+              </div>
+            </template>
+            <template v-else>
+              <div class="grid grid-cols-10 gap-1 mb-2">
+                <button
+                  v-for="letter in 'QWERTYUIOP'"
+                  :key="letter"
+                  @click="handleKeyPress({ key: letter.toLowerCase() })"
+                  class="p-2 text-center rounded-lg transition-colors duration-200"
+                  :class="[
+                    getKeyboardLetterClass(letter.toLowerCase()),
+                    isLetterDisabled(letter.toLowerCase()) ? 'opacity-50 cursor-not-allowed' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ]"
+                  :disabled="isLetterDisabled(letter.toLowerCase()) || gameOver"
+                >
+                  {{ letter }}
+                </button>
+              </div>
+              <div class="grid grid-cols-9 gap-1 mb-2">
+                <button
+                  v-for="letter in 'ASDFGHJKL'"
+                  :key="letter"
+                  @click="handleKeyPress({ key: letter.toLowerCase() })"
+                  class="p-2 text-center rounded-lg transition-colors duration-200"
+                  :class="[
+                    getKeyboardLetterClass(letter.toLowerCase()),
+                    isLetterDisabled(letter.toLowerCase()) ? 'opacity-50 cursor-not-allowed' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ]"
+                  :disabled="isLetterDisabled(letter.toLowerCase()) || gameOver"
+                >
+                  {{ letter }}
+                </button>
+              </div>
+              <div class="grid grid-cols-11 gap-1">
+                <button
+                  v-for="letter in 'ZXCVBNM'"
+                  :key="letter"
+                  @click="handleKeyPress({ key: letter.toLowerCase() })"
+                  class="p-2 text-center rounded-lg transition-colors duration-200"
+                  :class="[
+                    getKeyboardLetterClass(letter.toLowerCase()),
+                    isLetterDisabled(letter.toLowerCase()) ? 'opacity-50 cursor-not-allowed' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ]"
+                  :disabled="isLetterDisabled(letter.toLowerCase()) || gameOver"
+                >
+                  {{ letter }}
+                </button>
+                <button
+                  @click="handleKeyPress({ key: 'Enter' })"
+                  class="col-span-2 p-2 text-center rounded-lg bg-green-100 dark:bg-green-900 hover:bg-green-200 dark:hover:bg-green-800 transition-all duration-200"
+                  :disabled="gameOver"
+                >
+                  {{ t('enter') }}
+                </button>
+                <button
+                  @click="handleKeyPress({ key: 'Backspace' })"
+                  class="col-span-2 p-2 text-center rounded-lg bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 transition-all duration-200"
+                  :disabled="gameOver"
+                >
+                  <i class="fas fa-backspace"></i>
+                </button>
+              </div>
+            </template>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- مدال مهمان -->
-    <Teleport to="body">
-      <Transition>
-        <GuestModal
-          v-if="showGuestModal"
-          @close="showGuestModal = false"
-        />
-      </Transition>
-    </Teleport>
+      <!-- مدال مهمان -->
+      <Teleport to="body">
+        <Transition>
+          <GuestModal
+            v-if="showGuestModal"
+            @close="showGuestModal = false"
+          />
+        </Transition>
+      </Teleport>
+
+      <DailyModal
+        v-if="showDailyModal"
+        @close="showDailyModal = false"
+        @login="handleLoginClick"
+        @register="handleRegisterClick"
+      />
+
+      <ProfileModal
+        v-if="showProfileModal"
+        @close="showProfileModal = false"
+      />
+    </div>
   </div>
 </template>
 
@@ -248,12 +318,18 @@ import LoseAnimation from '~/components/LoseAnimation.vue'
 import MainNav from '~/components/Navigation/MainNav.vue'
 import StatsOverview from '~/components/Stats/Overview.vue'
 import GuestModal from '~/components/GuestModal.vue'
+import DailyModal from '~/components/Daily/DailyModal.vue'
+import ProfileModal from '~/components/Profile/ProfileModal.vue'
+import { navigateTo } from '#app'
+import { useAuthStore } from '~/stores/auth'
+import { useDailyChallengeStore } from '~/stores/dailyChallenge'
 
 const { t, locale, setLocale } = useTranslations()
 const { playSound, isSoundEnabled, toggleSound } = useSounds()
 const router = useRouter()
 const colorMode = useColorMode()
 const theme = computed(() => colorMode.value)
+const dailyStore = useDailyChallengeStore()
 const difficulty = ref('medium')
 const guesses = ref([])
 const currentRow = ref(0)
@@ -278,6 +354,11 @@ const helpLetters = ref(new Set()) // برای ذخیره موقعیت حروف 
 const revealedHelpLetters = ref(new Set()) // برای ذخیره حروفی که قبلاً به عنوان کمکی نشان داده شده‌اند
 const showKeyboard = ref(true) // برای نمایش/مخفی کردن کیبورد
 const showGuestModal = ref(false)
+const showDailyModal = ref(false)
+const showProfileModal = ref(false)
+const authStore = useAuthStore()
+const isAuthenticated = computed(() => authStore.isLoggedIn && !authStore.isGuest)
+const timeUntilNext = ref(0)
 
 const maxGuesses = computed(() => {
   switch (difficulty.value) {
@@ -543,7 +624,7 @@ watch(locale, (newLocale) => {
   document.body.style.textAlign = newLocale === 'fa' ? 'right' : 'left'
 })
 
-// اضافه کردن onMounted برای تنظیم جهت متن اولیه
+let timer
 onMounted(() => {
   // تنظیمات اولیه
   document.documentElement.dir = locale.value === 'fa' ? 'rtl' : 'ltr'
@@ -565,10 +646,18 @@ onMounted(() => {
   }
   
   window.addEventListener('keydown', handleKeyPress)
+  
+  // تنظیم تایمر چالش روزانه
+  if (isAuthenticated.value) {
+    dailyStore.fetchTodaysChallenge()
+    updateTimer()
+    timer = setInterval(updateTimer, 1000)
+  }
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyPress)
+  if (timer) clearInterval(timer)
 })
 
 // اضافه کردن تابع جدید برای کلاس‌های کیبورد
@@ -584,6 +673,38 @@ const getKeyboardLetterClass = (letter) => {
   
   return classes
 }
+
+const handleLoginSuccess = () => {
+  // Handle login success
+}
+
+const handleRegisterSuccess = () => {
+  // Handle register success
+}
+
+const logout = () => {
+  // Handle logout
+}
+
+const handleLoginClick = () => {
+  navigateTo('/login')
+}
+
+const handleRegisterClick = () => {
+  navigateTo('/register')
+}
+
+const updateTimer = () => {
+  const now = new Date()
+  const tomorrow = new Date(now)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  tomorrow.setHours(0, 0, 0, 0)
+  timeUntilNext.value = tomorrow - now
+}
+
+const hours = computed(() => Math.floor(timeUntilNext.value / (1000 * 60 * 60)).toString().padStart(2, '0'))
+const minutes = computed(() => Math.floor((timeUntilNext.value % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0'))
+const seconds = computed(() => Math.floor((timeUntilNext.value % 1000) / 100).toString().padStart(2, '0'))
 </script>
 
 <style>
@@ -812,5 +933,65 @@ button:disabled {
 .v-enter-from,
 .v-leave-to {
   opacity: 0;
+}
+
+/* انیمیشن‌های جدید برای بک‌گراند */
+@keyframes float-slow {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(20px, 20px) rotate(2deg);
+  }
+  50% {
+    transform: translate(-10px, 30px) rotate(-1deg);
+  }
+  75% {
+    transform: translate(-20px, 10px) rotate(1deg);
+  }
+}
+
+@keyframes float-medium {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(-30px, -20px) rotate(-2deg);
+  }
+  66% {
+    transform: translate(20px, -10px) rotate(2deg);
+  }
+}
+
+@keyframes float-fast {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(15px, -15px) rotate(1deg);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 20s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: float-medium 15s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float-fast 10s ease-in-out infinite;
+}
+
+/* اضافه کردن transition برای تغییر تم */
+.min-h-screen {
+  transition: background-color 0.5s ease-in-out;
+}
+
+/* بهبود کیفیت blur */
+.blur-3xl {
+  backdrop-filter: blur(64px);
+  -webkit-backdrop-filter: blur(64px);
 }
 </style> 

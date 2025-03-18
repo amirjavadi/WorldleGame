@@ -1,71 +1,55 @@
 <template>
-  <div class="space-y-6">
-    <!-- Score Display for Daily Challenge -->
-    <div v-if="showScore" class="flex justify-between items-center bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-4 rounded-lg">
+  <div class="flex flex-col items-center justify-center space-y-8">
+    <!-- Score Display -->
+    <div v-if="isDailyChallenge" class="flex items-center justify-between w-full max-w-2xl">
       <div class="flex items-center space-x-4 rtl:space-x-reverse">
         <div class="text-center">
-          <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ score }}</div>
-          <div class="text-sm text-indigo-500 dark:text-indigo-500">امتیاز</div>
+          <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ currentScore }}</div>
+          <div class="text-sm text-gray-500 dark:text-gray-400">{{ t('score') }}</div>
         </div>
         <div class="text-center">
-          <div class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ guessCount }}/{{ maxAttempts }}</div>
-          <div class="text-sm text-purple-500 dark:text-purple-500">حدس‌ها</div>
+          <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ guessCount }}/{{ maxAttempts }}</div>
+          <div class="text-sm text-gray-500 dark:text-gray-400">{{ t('attempts') }}</div>
         </div>
       </div>
-      <div v-if="personalBest" class="text-center bg-yellow-100 dark:bg-yellow-900/20 px-4 py-2 rounded-lg">
-        <div class="text-sm font-medium text-yellow-800 dark:text-yellow-300">رکورد شخصی</div>
-        <div class="text-lg font-bold text-yellow-700 dark:text-yellow-400">{{ personalBest }}</div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ personalBest }}</div>
+        <div class="text-sm text-gray-500 dark:text-gray-400">{{ t('dailyChallengeBest') }}</div>
       </div>
     </div>
 
     <!-- Game Board -->
-    <div class="game-board">
-      <div v-for="(row, rowIndex) in board" :key="rowIndex" class="row">
+    <div class="grid grid-cols-5 gap-2">
+      <div
+        v-for="row in maxAttempts"
+        :key="row"
+        class="flex space-x-2 rtl:space-x-reverse"
+      >
         <div
-          v-for="(cell, cellIndex) in row"
-          :key="cellIndex"
+          v-for="col in 5"
+          :key="col"
+          class="w-14 h-14 border-2 rounded-lg flex items-center justify-center text-2xl font-bold uppercase"
           :class="[
-            'cell',
-            cell.color,
-            { 'pop-in': cell.letter && !cell.color },
-            { 'flip-in': cell.color },
-            { 'shake': rowIndex === currentRow && shake }
+            getCellColor(row - 1, col - 1),
+            getCellAnimation(row - 1, col - 1)
           ]"
-          :style="{ 
-            animationDelay: cell.color ? `${cellIndex * 0.1}s` : '0s',
-            '--flip-delay': `${cellIndex * 0.1}s`
-          }"
         >
-          {{ cell.letter }}
+          {{ getCellLetter(row - 1, col - 1) }}
         </div>
       </div>
     </div>
 
     <!-- Virtual Keyboard -->
-    <div class="keyboard">
-      <div v-for="(row, rowIndex) in keyboardLayout" :key="rowIndex" class="keyboard-row">
-        <button
-          v-for="key in row"
-          :key="key"
-          :class="[
-            'key',
-            getKeyColor(key),
-            { 'key-press': pressedKey === key }
-          ]"
-          @click="handleKeyPress(key)"
-          :disabled="!isInteractive"
-        >
-          <template v-if="key === 'Backspace'">
-            <i class="fas fa-backspace"></i>
-          </template>
-          <template v-else-if="key === 'Enter'">
-            <i class="fas fa-level-down-alt fa-rotate-90"></i>
-          </template>
-          <template v-else>
-            {{ key }}
-          </template>
-        </button>
-      </div>
+    <div v-if="interactive" class="grid grid-cols-10 gap-1">
+      <button
+        v-for="key in keyboardLayout"
+        :key="key"
+        class="px-3 py-4 bg-gray-200 dark:bg-gray-700 rounded-lg text-lg font-bold uppercase hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+        :class="getKeyColor(key)"
+        @click="handleKeyPress(key)"
+      >
+        {{ key }}
+      </button>
     </div>
   </div>
 </template>
@@ -86,28 +70,31 @@ const props = defineProps({
     type: Number,
     default: 6
   },
-  showScore: {
+  interactive: {
+    type: Boolean,
+    default: true
+  },
+  isDailyChallenge: {
     type: Boolean,
     default: false
   },
-  score: {
+  currentScore: {
+    type: Number,
+    default: 0
+  },
+  guessCount: {
     type: Number,
     default: 0
   },
   personalBest: {
     type: Number,
     default: null
-  },
-  isInteractive: {
-    type: Boolean,
-    default: true
   }
 })
 
 const emit = defineEmits(['make-guess'])
 
 const currentRow = computed(() => props.guesses.length)
-const guessCount = computed(() => props.guesses.length)
 const shake = ref(false)
 const pressedKey = ref(null)
 
@@ -152,7 +139,7 @@ function getKeyColor(key) {
 }
 
 function handleKeyPress(key) {
-  if (!props.isInteractive) return
+  if (!props.interactive) return
   
   pressedKey.value = key
   setTimeout(() => pressedKey.value = null, 100)
@@ -184,7 +171,7 @@ function makeGuess() {
 
 // Keyboard event handling
 function handleKeyDown(event) {
-  if (!props.isInteractive) return
+  if (!props.interactive) return
   
   const key = event.key.toUpperCase()
   if (key === 'BACKSPACE' || key === 'ENTER' || keyboardLayout.flat().includes(key)) {
@@ -199,6 +186,40 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown)
 })
+
+const getCellColor = (row, col) => {
+  if (row >= props.guesses.length) {
+    return 'border-gray-300 dark:border-gray-600'
+  }
+
+  const guess = props.guesses[row]
+  if (!guess) return 'border-gray-300 dark:border-gray-600'
+
+  const letter = guess[col]
+  if (!letter) return 'border-gray-300 dark:border-gray-600'
+
+  if (letter === props.word[col]) {
+    return 'bg-green-500 border-green-500 text-white'
+  }
+
+  if (props.word.includes(letter)) {
+    return 'bg-yellow-500 border-yellow-500 text-white'
+  }
+
+  return 'bg-gray-500 border-gray-500 text-white'
+}
+
+const getCellAnimation = (row, col) => {
+  if (row === props.guesses.length - 1) {
+    return 'animate-flip'
+  }
+  return ''
+}
+
+const getCellLetter = (row, col) => {
+  if (row >= props.guesses.length) return ''
+  return props.guesses[row][col] || ''
+}
 </script>
 
 <style scoped>

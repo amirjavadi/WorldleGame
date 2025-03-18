@@ -208,6 +208,57 @@ class ApiService {
         token
       })
   }
+
+  // Daily Challenge APIs
+  daily = {
+    // دریافت چالش امروز
+    getTodaysChallenge: async () => {
+      return await this.request('/dailychallenge/today', {
+        method: 'GET'
+      })
+    },
+
+    // شروع مشارکت در چالش
+    participate: async () => {
+      return await this.request('/dailychallenge/participate', {
+        method: 'POST'
+      })
+    },
+
+    // ارسال حدس
+    submitGuess: async (participationId, guess) => {
+      return await this.request(`/dailychallenge/${participationId}/guess`, {
+        method: 'POST',
+        body: JSON.stringify({ guess })
+      })
+    },
+
+    // دریافت جدول امتیازات
+    getLeaderboard: async (date = null, limit = 10) => {
+      const params = new URLSearchParams()
+      if (date) params.append('date', date)
+      if (limit) params.append('limit', limit)
+      return await this.request(`/dailychallenge/leaderboard?${params}`, {
+        method: 'GET'
+      })
+    },
+
+    // دریافت وضعیت مشارکت کاربر
+    getParticipation: async (date = null) => {
+      const params = new URLSearchParams()
+      if (date) params.append('date', date)
+      return await this.request(`/dailychallenge/participation?${params}`, {
+        method: 'GET'
+      })
+    },
+
+    // دریافت چالش‌های گذشته
+    getPastChallenges: async (days = 7) => {
+      return await this.request(`/dailychallenge/past-challenges?days=${days}`, {
+        method: 'GET'
+      })
+    }
+  }
 }
 
 // Create a singleton instance
@@ -225,5 +276,5 @@ axios.interceptors.response.use(
   }
 )
 
-// Export the singleton
-export default api 
+// Export the singleton as a named export
+export { api } 
