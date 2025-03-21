@@ -18,7 +18,13 @@ class ApiService {
       if (!authStore.isTokenChecked) {
         await authStore.init()
       }
-      return authStore.isLoggedIn && !authStore.isGuest && authStore.token
+      if (!authStore.isLoggedIn || authStore.isGuest) {
+        throw new Error('لطفاً ابتدا وارد شوید')
+      }
+      if (!authStore.token) {
+        throw new Error('توکن شما منقضی شده است. لطفاً دوباره وارد شوید')
+      }
+      return authStore.token
     }
     return false
   }
@@ -220,42 +226,103 @@ class ApiService {
 
     // شروع مشارکت در چالش
     participate: async () => {
+      const token = await this.verifyTokenBeforeRequest()
+      if (!token) {
+        throw new Error('لطفاً ابتدا وارد شوید')
+      }
       return await this.request('/dailychallenge/participate', {
-        method: 'POST'
+        method: 'POST',
+        token
       })
     },
 
     // ارسال حدس
     submitGuess: async (participationId, guess) => {
+      const token = await this.verifyTokenBeforeRequest()
+      if (!token) {
+        throw new Error('لطفاً ابتدا وارد شوید')
+      }
       return await this.request(`/dailychallenge/${participationId}/guess`, {
         method: 'POST',
-        body: JSON.stringify({ guess })
+        body: JSON.stringify({ guess }),
+        token
       })
     },
 
     // دریافت جدول امتیازات
     getLeaderboard: async (date = null, limit = 10) => {
+      const token = await this.verifyTokenBeforeRequest()
+      if (!token) {
+        throw new Error('لطفاً ابتدا وارد شوید')
+      }
       const params = new URLSearchParams()
       if (date) params.append('date', date)
       if (limit) params.append('limit', limit)
       return await this.request(`/dailychallenge/leaderboard?${params}`, {
-        method: 'GET'
+        method: 'GET',
+        token
       })
     },
 
     // دریافت وضعیت مشارکت کاربر
     getParticipation: async (date = null) => {
-      const params = new URLSearchParams()
-      if (date) params.append('date', date)
-      return await this.request(`/dailychallenge/participation?${params}`, {
-        method: 'GET'
-      })
+      try {
+        const token = await this.verifyTokenBeforeRequest()
+        const params = new URLSearchParams()
+        if (date) params.append('date', date)
+        const response = await this.request(`/dailychallenge/participation?${params}`, {
+          method: 'GET',
+          token
+        })
+        return response
+      } catch (error) {
+        if (error.message.includes('توکن')) {
+          // اگر توکن منقضی شده، کاربر را به صفحه لاگین هدایت می‌کنیم
+          const authStore = useAuthStore()
+          await authStore.logout()
+          navigateTo('/login')
+        }
+        throw error
+      }
     },
 
     // دریافت چالش‌های گذشته
     getPastChallenges: async (days = 7) => {
+      const token = await this.verifyTokenBeforeRequest()
+      if (!token) {
+        throw new Error('لطفاً ابتدا وارد شوید')
+      }
       return await this.request(`/dailychallenge/past-challenges?days=${days}`, {
-        method: 'GET'
+        method: 'GET',
+        token
+      })
+    },
+
+    // دریافت آمار چالش روزانه
+    getDailyStats: async (date = null) => {
+      const token = await this.verifyTokenBeforeRequest()
+      if (!token) {
+        throw new Error('لطفاً ابتدا وارد شوید')
+      }
+      const params = new URLSearchParams()
+      if (date) params.append('date', date)
+      return await this.request(`/dailychallenge/stats?${params}`, {
+        method: 'GET',
+        token
+      })
+    },
+
+    // دریافت رتبه کاربر در چالش روزانه
+    getUserRank: async (date = null) => {
+      const token = await this.verifyTokenBeforeRequest()
+      if (!token) {
+        throw new Error('لطفاً ابتدا وارد شوید')
+      }
+      const params = new URLSearchParams()
+      if (date) params.append('date', date)
+      return await this.request(`/dailychallenge/rank?${params}`, {
+        method: 'GET',
+        token
       })
     }
   }

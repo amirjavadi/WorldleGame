@@ -71,6 +71,9 @@ const error = computed(() => dailyStore.error)
 const word = computed(() => dailyStore.word)
 const guesses = computed(() => dailyStore.guesses)
 const isCompleted = computed(() => dailyStore.isCompleted)
+const currentScore = computed(() => dailyStore.currentScore)
+const personalBest = computed(() => dailyStore.personalBest)
+const guessCount = computed(() => dailyStore.guessCount)
 const showStats = ref(false)
 
 // دریافت چالش روزانه
@@ -80,7 +83,10 @@ const refreshChallenge = async () => {
 
 // ارسال حدس
 const handleGuess = async (guess) => {
-  await dailyStore.submitGuess(guess)
+  const result = await dailyStore.submitGuess(guess)
+  if (result?.isGameOver) {
+    showStats.value = true
+  }
 }
 
 // شروع چالش

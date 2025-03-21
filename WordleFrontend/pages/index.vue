@@ -25,7 +25,7 @@
                 <div class="flex items-center space-x-3 rtl:space-x-reverse">
                   <div class="relative">
                     <button
-                      @click="showDailyModal = true"
+                      @click="showDailyChallenge = true"
                       class="group relative flex items-center space-x-2 rtl:space-x-reverse px-4 py-1.5 bg-gradient-to-r from-indigo-200/90 via-purple-200/90 to-pink-200/90 dark:from-indigo-800/40 dark:via-purple-800/40 dark:to-pink-800/40 text-indigo-700 dark:text-indigo-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-500 transform hover:scale-[1.02] backdrop-blur-sm overflow-hidden"
                     >
                       <i class="fas fa-calendar-day text-lg relative z-10 group-hover:rotate-12 transition-transform duration-300"></i>
@@ -292,16 +292,16 @@
         </Transition>
       </Teleport>
 
-      <DailyModal
-        v-if="showDailyModal"
-        @close="showDailyModal = false"
-        @login="handleLoginClick"
-        @register="handleRegisterClick"
-      />
-
       <ProfileModal
         v-if="showProfileModal"
         @close="showProfileModal = false"
+      />
+
+      <!-- Daily Challenge Modal -->
+      <DailyModal
+        v-if="showDailyChallenge"
+        @close="showDailyChallenge = false"
+        @start="handleStartDailyChallenge"
       />
     </div>
   </div>
@@ -354,11 +354,25 @@ const helpLetters = ref(new Set()) // برای ذخیره موقعیت حروف 
 const revealedHelpLetters = ref(new Set()) // برای ذخیره حروفی که قبلاً به عنوان کمکی نشان داده شده‌اند
 const showKeyboard = ref(true) // برای نمایش/مخفی کردن کیبورد
 const showGuestModal = ref(false)
-const showDailyModal = ref(false)
 const showProfileModal = ref(false)
 const authStore = useAuthStore()
 const isAuthenticated = computed(() => authStore.isLoggedIn && !authStore.isGuest)
-const timeUntilNext = ref(0)
+const showDailyChallenge = ref(false)
+
+const hours = computed(() => {
+  if (!dailyStore.timeUntilNextChallenge) return '00'
+  return String(Math.floor(dailyStore.timeUntilNextChallenge / 3600000)).padStart(2, '0')
+})
+
+const minutes = computed(() => {
+  if (!dailyStore.timeUntilNextChallenge) return '00'
+  return String(Math.floor((dailyStore.timeUntilNextChallenge % 3600000) / 60000)).padStart(2, '0')
+})
+
+const seconds = computed(() => {
+  if (!dailyStore.timeUntilNextChallenge) return '00'
+  return String(Math.floor((dailyStore.timeUntilNextChallenge % 60000) / 1000)).padStart(2, '0')
+})
 
 const maxGuesses = computed(() => {
   switch (difficulty.value) {
@@ -650,14 +664,11 @@ onMounted(() => {
   // تنظیم تایمر چالش روزانه
   if (isAuthenticated.value) {
     dailyStore.fetchTodaysChallenge()
-    updateTimer()
-    timer = setInterval(updateTimer, 1000)
   }
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyPress)
-  if (timer) clearInterval(timer)
 })
 
 // اضافه کردن تابع جدید برای کلاس‌های کیبورد
@@ -694,17 +705,70 @@ const handleRegisterClick = () => {
   navigateTo('/register')
 }
 
-const updateTimer = () => {
-  const now = new Date()
-  const tomorrow = new Date(now)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  tomorrow.setHours(0, 0, 0, 0)
-  timeUntilNext.value = tomorrow - now
+// دریافت رکورد شخصی از localStorage
+const personalBest = computed(() => {
+  if (process.client) {
+    const best = localStorage.getItem('dailyChallengeBest')
+    return best ? parseInt(best) : null
+  }
+  return null
+})
+
+// ذخیره رکورد شخصی در localStorage
+const updatePersonalBest = (score) => {
+  if (process.client) {
+    const currentBest = localStorage.getItem('dailyChallengeBest')
+    if (!currentBest || score > parseInt(currentBest)) {
+      localStorage.setItem('dailyChallengeBest', score.toString())
+    }
+  }
 }
 
-const hours = computed(() => Math.floor(timeUntilNext.value / (1000 * 60 * 60)).toString().padStart(2, '0'))
-const minutes = computed(() => Math.floor((timeUntilNext.value % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0'))
-const seconds = computed(() => Math.floor((timeUntilNext.value % 1000) / 100).toString().padStart(2, '0'))
+// شروع تایمر
+onMounted(async () => {
+  if (showDailyChallenge.value) {
+    await Promise.all([
+      dailyStore.fetchTodaysChallenge(),
+      dailyStore.fetchUserParticipation(),
+      dailyStore.fetchLeaderboard()
+    ])
+
+    if (!dailyStore.participation) {
+      await dailyStore.startParticipation()
+    }
+
+    updateTimer()
+    timerInterval = setInterval(updateTimer, 1000)
+  }
+})
+
+onUnmounted(() => {
+  if (timerInterval) {
+    clearInterval(timerInterval)
+  }
+})
+
+// مدیریت حدس
+const handleGuess = async (guess) => {
+  try {
+    await dailyStore.submitGuess(guess)
+    if (dailyStore.hasWon) {
+      updatePersonalBest(dailyStore.currentScore)
+    }
+  } catch (err) {
+    console.error('Error submitting guess:', err)
+  }
+}
+
+// Add this function to handle starting the daily challenge
+const handleStartDailyChallenge = async () => {
+  try {
+    await dailyStore.startParticipation()
+    showDailyChallenge.value = false
+  } catch (error) {
+    console.error('Error starting daily challenge:', error)
+  }
+}
 </script>
 
 <style>

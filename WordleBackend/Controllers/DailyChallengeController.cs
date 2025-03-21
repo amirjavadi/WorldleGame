@@ -88,9 +88,9 @@ public class DailyChallengeController : ControllerBase
         return Ok(leaderboard);
     }
 
-    [HttpGet]
+    [HttpGet("participation")]
     [Authorize]
-    public async Task<ActionResult<DailyChallengeParticipation>> GetMyParticipation([FromQuery] DateTime? date)
+    public async Task<ActionResult<ParticipationResponse>> GetMyParticipation([FromQuery] DateTime? date)
     {
         try
         {
@@ -100,11 +100,17 @@ public class DailyChallengeController : ControllerBase
 
             var targetDate = date?.Date ?? DateTime.UtcNow.Date;
             var participation = await _dailyChallengeService.GetUserParticipationAsync(userId, targetDate);
+            var challenge = await _dailyChallengeService.GetTodaysChallengeAsync();
             
-            if (participation == null)
-                return NotFound();
+            var response = new ParticipationResponse
+            {
+                HasParticipated = participation != null,
+                Participation = participation,
+                Challenge = challenge,
+                TimeUntilNext = (targetDate.Date.AddDays(1) - DateTime.UtcNow).TotalMilliseconds
+            };
 
-            return Ok(participation);
+            return Ok(response);
         }
         catch (Exception ex)
         {
@@ -129,4 +135,12 @@ public class GuessRequest
 public class CreateChallengeRequest
 {
     public DateTime Date { get; set; }
+}
+
+public class ParticipationResponse
+{
+    public bool HasParticipated { get; set; }
+    public DailyChallengeParticipation? Participation { get; set; }
+    public DailyChallenge? Challenge { get; set; }
+    public double TimeUntilNext { get; set; }
 } 

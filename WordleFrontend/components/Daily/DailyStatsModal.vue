@@ -118,7 +118,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useTranslations } from '~/composables/useTranslations'
 import { useDailyChallengeStore } from '~/stores/dailyChallenge'
 
@@ -134,11 +134,30 @@ const winRate = computed(() => dailyStore.winRate)
 const guessCount = computed(() => dailyStore.guessCount)
 const hasWon = computed(() => dailyStore.hasWon)
 const leaderboard = computed(() => dailyStore.leaderboard)
+const stats = computed(() => dailyStore.stats)
+
+// دریافت آمار و رتبه‌بندی
+const fetchData = async () => {
+  await Promise.all([
+    dailyStore.fetchLeaderboard(),
+    dailyStore.fetchDailyStats()
+  ])
+}
+
+// اجرای اولیه
+onMounted(async () => {
+  await fetchData()
+})
 
 // کپی نتیجه
 const copyResult = async () => {
   try {
-    const text = t('dailyChallengeShareText', { attempts: guessCount.value })
+    const text = t('dailyChallengeShareText', { 
+      attempts: guessCount.value,
+      score: currentScore.value,
+      totalPlayers: stats.value?.totalPlayers || 0,
+      averageScore: stats.value?.averageScore || 0
+    })
     await navigator.clipboard.writeText(text)
     // نمایش پیام موفقیت
   } catch (err) {
@@ -150,7 +169,12 @@ const copyResult = async () => {
 // اشتراک نتیجه
 const shareResult = async () => {
   try {
-    const text = t('dailyChallengeShareText', { attempts: guessCount.value })
+    const text = t('dailyChallengeShareText', { 
+      attempts: guessCount.value,
+      score: currentScore.value,
+      totalPlayers: stats.value?.totalPlayers || 0,
+      averageScore: stats.value?.averageScore || 0
+    })
     if (navigator.share) {
       await navigator.share({
         title: t('dailyChallenge'),

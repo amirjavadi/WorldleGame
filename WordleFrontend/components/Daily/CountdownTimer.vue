@@ -21,48 +21,43 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useTranslations } from '~/composables/useTranslations'
+import { useDailyChallengeStore } from '~/stores/dailyChallenge'
 
 const { t } = useTranslations()
+const dailyStore = useDailyChallengeStore()
 
-const hours = ref('00')
-const minutes = ref('00')
-const seconds = ref('00')
+const timeUntilNext = computed(() => dailyStore.timeUntilNextChallenge)
+const hours = computed(() => {
+  if (!timeUntilNext.value) return '00'
+  return String(Math.floor(timeUntilNext.value / (1000 * 60 * 60))).padStart(2, '0')
+})
+const minutes = computed(() => {
+  if (!timeUntilNext.value) return '00'
+  return String(Math.floor((timeUntilNext.value % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0')
+})
+const seconds = computed(() => {
+  if (!timeUntilNext.value) return '00'
+  return String(Math.floor((timeUntilNext.value % (1000 * 60)) / 1000)).padStart(2, '0')
+})
 
-let timer = null
+// تعریف emit برای رفرش
+const emit = defineEmits(['refresh'])
 
-const updateTimer = () => {
-  const now = new Date()
-  const tomorrow = new Date(now)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  tomorrow.setHours(0, 0, 0, 0)
-
-  const diff = tomorrow - now
-
-  hours.value = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0')
-  minutes.value = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0')
-  seconds.value = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0')
-
-  if (diff <= 0) {
-    clearInterval(timer)
-    // Emit event to parent to refresh challenge
+// شروع تایمر در هنگام mount
+onMounted(() => {
+  if (timeUntilNext.value <= 0) {
     emit('refresh')
   }
-}
-
-onMounted(() => {
-  updateTimer()
-  timer = setInterval(updateTimer, 1000)
 })
 
-onUnmounted(() => {
-  if (timer) {
-    clearInterval(timer)
+// واکنش به تغییرات timeUntilNextChallenge
+watch(() => timeUntilNext.value, (newValue) => {
+  if (newValue <= 0) {
+    emit('refresh')
   }
 })
-
-const emit = defineEmits(['refresh'])
 </script>
 
 <style scoped>

@@ -29,6 +29,10 @@
 - [x] سیستم کلمه روزانه
 - [x] امتیازات ویژه
 - [x] رتبه‌بندی روزانه
+- [x] طراحی مینیمال مدال نتایج
+- [x] انیمیشن‌های روان
+- [x] پشتیبانی از حالت خالی
+- [x] ترجمه‌های فارسی و انگلیسی
 
 ### فاز 5: جدول امتیازات
 - [x] نمایش برترین‌ها
@@ -169,18 +173,28 @@
 
 ### Phase 3: Complete UI Components
 1. Complete `Challenge.vue`:
-   - Add score display
-   - Add rank display
-   - Add statistics display
+   - [x] Add score display
+   - [x] Add rank display
+   - [x] Add statistics display
 
 2. Complete `DailyModal.vue`:
-   - Add leaderboard display
-   - Add overall statistics display
-   - Add challenge history display
+   - [x] Add leaderboard display
+   - [x] Add overall statistics display
+   - [x] Add challenge history display
+   - [x] Add minimalistic podium design
+   - [x] Add user rank display
+   - [x] Add view all rankings button
 
 3. Complete `CountdownTimer.vue`:
-   - Add better animations
-   - Add next challenge date display
+   - [x] Add better animations
+   - [x] Add next challenge date display
+
+4. Complete `LeaderboardModal.vue`:
+   - [x] Add minimalistic design
+   - [x] Add loading states
+   - [x] Add error handling
+   - [x] Add empty state
+   - [x] Add player rankings with medals
 
 ### Phase 4: Add Additional Features
 1. Add sharing system:

@@ -128,13 +128,15 @@ import { useGameStore } from '~/stores/game'
 import ProfileModal from '~/components/Profile/ProfileModal.vue'
 import LeaderboardModal from '~/components/Leaderboard/LeaderboardModal.vue'
 import DailyModal from '~/components/Daily/DailyModal.vue'
+import { useColorMode } from '#imports'
+import { computed } from 'vue'
 
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
 const gameStore = useGameStore()
 const { t, locale, setLocale } = useTranslations()
-
-const difficulty = ref('medium')
+const colorMode = useColorMode()
+const theme = computed(() => colorMode.value)
 const isSoundEnabled = ref(true)
 const score = ref(0)
 const isProfileModalOpen = ref(false)
@@ -174,4 +176,6 @@ watch(() => authStore.isLoggedIn, (isLoggedIn) => {
     isLeaderboardModalOpen.value = false
   }
 })
+
+defineEmits(['startDailyChallenge'])
 </script> 
